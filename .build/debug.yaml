@@ -1,0 +1,81 @@
+client:
+  name: basic
+  file-system: device-agnostic
+tools: {}
+targets:
+  "Down-arm64-apple-macosx26.0-debug.exe": ["<Down-arm64-apple-macosx26.0-debug.exe>"]
+  "Down-arm64-apple-macosx26.0-debug.module": ["<Down-arm64-apple-macosx26.0-debug.module>"]
+  "PackageStructure": ["<PackageStructure>"]
+  "main": ["<Down-arm64-apple-macosx26.0-debug.exe>","<Down-arm64-apple-macosx26.0-debug.module>"]
+  "test": ["<Down-arm64-apple-macosx26.0-debug.exe>","<Down-arm64-apple-macosx26.0-debug.module>"]
+default: "main"
+nodes:
+  "/Users/thieule/down/Sources/Down/":
+    is-directory-structure: true
+    content-exclusion-patterns: [".git",".build"]
+  "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down":
+    is-mutated: true
+commands:
+  "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down-entitlement.plist":
+    tool: write-auxiliary-file
+    inputs: ["<entitlement-plist>","<com.apple.security.get-task-allow>"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down-entitlement.plist"]
+    description: "Write auxiliary file /Users/thieule/down/.build/arm64-apple-macosx/debug/Down-entitlement.plist"
+
+  "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/sources":
+    tool: write-auxiliary-file
+    inputs: ["<sources-file-list>","/Users/thieule/down/Sources/Down/ContentView.swift","/Users/thieule/down/Sources/Down/DownApp.swift"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/sources"]
+    description: "Write auxiliary file /Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/sources"
+
+  "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.product/Objects.LinkFileList":
+    tool: write-auxiliary-file
+    inputs: ["<link-file-list>","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swift.o"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.product/Objects.LinkFileList"]
+    description: "Write auxiliary file /Users/thieule/down/.build/arm64-apple-macosx/debug/Down.product/Objects.LinkFileList"
+
+  "/Users/thieule/down/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt":
+    tool: write-auxiliary-file
+    inputs: ["<swift-get-version>","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"]
+    always-out-of-date: "true"
+    description: "Write auxiliary file /Users/thieule/down/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+
+  "<Down-arm64-apple-macosx26.0-debug.exe>":
+    tool: phony
+    inputs: ["<Down-arm64-apple-macosx26.0-debug.exe-CodeSigning>"]
+    outputs: ["<Down-arm64-apple-macosx26.0-debug.exe>"]
+
+  "<Down-arm64-apple-macosx26.0-debug.module>":
+    tool: phony
+    inputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Modules/Down.swiftmodule"]
+    outputs: ["<Down-arm64-apple-macosx26.0-debug.module>"]
+
+  "C.Down-arm64-apple-macosx26.0-debug.exe":
+    tool: shell
+    inputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.product/Objects.LinkFileList"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down"]
+    description: "Linking ./.build/arm64-apple-macosx/debug/Down"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-L","/Users/thieule/down/.build/arm64-apple-macosx/debug","-o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down","-module-name","Down","-Xlinker","-no_warn_duplicate_libraries","-emit-executable","-Xlinker","-alias","-Xlinker","_Down_main","-Xlinker","_main","-Xlinker","-rpath","-Xlinker","@loader_path","@/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.product/Objects.LinkFileList","-Xlinker","-rpath","-Xlinker","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx","-target","arm64-apple-macosx14.0","-Xlinker","-add_ast_path","-Xlinker","/Users/thieule/down/.build/arm64-apple-macosx/debug/Modules/Down.swiftmodule","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g"]
+
+  "C.Down-arm64-apple-macosx26.0-debug.exe-entitlements":
+    tool: shell
+    inputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down-entitlement.plist"]
+    outputs: ["<Down-arm64-apple-macosx26.0-debug.exe-CodeSigning>"]
+    description: "Applying debug entitlements to ./.build/arm64-apple-macosx/debug/Down"
+    args: ["codesign","--force","--sign","-","--entitlements","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down-entitlement.plist","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down"]
+
+  "C.Down-arm64-apple-macosx26.0-debug.module":
+    tool: shell
+    inputs: ["/Users/thieule/down/Sources/Down/ContentView.swift","/Users/thieule/down/Sources/Down/DownApp.swift","/Users/thieule/down/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/sources"]
+    outputs: ["/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swift.o","/Users/thieule/down/.build/arm64-apple-macosx/debug/Modules/Down.swiftmodule"]
+    description: "Compiling Swift Module 'Down' (2 sources)"
+    args: ["/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc","-module-name","Down","-emit-dependencies","-emit-module","-emit-module-path","/Users/thieule/down/.build/arm64-apple-macosx/debug/Modules/Down.swiftmodule","-output-file-map","/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/output-file-map.json","-incremental","-c","@/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/sources","-I","/Users/thieule/down/.build/arm64-apple-macosx/debug/Modules","-target","arm64-apple-macosx14.0","-incremental","-enable-batch-mode","-serialize-diagnostics","-index-store-path","/Users/thieule/down/.build/arm64-apple-macosx/debug/index/store","-Onone","-enable-testing","-j12","-DSWIFT_PACKAGE","-DDEBUG","-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE","-module-cache-path","/Users/thieule/down/.build/arm64-apple-macosx/debug/ModuleCache","-parseable-output","-Xfrontend","-entry-point-function-name","-Xfrontend","Down_main","-swift-version","5","-plugin-path","/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing","-sdk","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-F","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-I","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-L","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib","-g","-Xcc","-isysroot","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks","-Xcc","-F","-Xcc","/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/PrivateFrameworks","-Xcc","-fPIC","-Xcc","-g","-package-name","down"]
+
+  "PackageStructure":
+    tool: package-structure-tool
+    inputs: ["/Users/thieule/down/Sources/Down/","/Users/thieule/down/Package.swift","/Users/thieule/down/Package.resolved"]
+    outputs: ["<PackageStructure>"]
+    description: "Planning build"
+    allow-missing-inputs: true
+

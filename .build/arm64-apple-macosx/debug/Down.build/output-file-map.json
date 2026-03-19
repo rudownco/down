@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/master.swiftdeps"
+  },
+  "/Users/thieule/down/Sources/Down/ContentView.swift": {
+    "dependencies": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.d",
+    "object": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swift.o",
+    "swiftmodule": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.swiftdeps",
+    "diagnostics": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/ContentView.dia"
+  },
+  "/Users/thieule/down/Sources/Down/DownApp.swift": {
+    "dependencies": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.d",
+    "object": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swift.o",
+    "swiftmodule": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.swiftdeps",
+    "diagnostics": "/Users/thieule/down/.build/arm64-apple-macosx/debug/Down.build/DownApp.dia"
+  }
+}
