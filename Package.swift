@@ -1,18 +1,22 @@
 // swift-tools-version: 5.9
+// NOTE: This package manifest exists for repo tooling.
+// The app is an iOS Xcode project — create Down.xcodeproj and add the
+// source folders (App, DesignSystem, Components, Screens, etc.) as groups.
 import PackageDescription
 
 let package = Package(
     name: "Down",
     platforms: [
-        .macOS(.v14)
+        .iOS(.v17)
     ],
     products: [
-        .executable(name: "Down", targets: ["Down"])
+        .library(name: "Down", targets: ["Down"])
     ],
     targets: [
-        .executableTarget(
+        .target(
             name: "Down",
-            path: "Sources/Down"
+            path: "App",
+            exclude: ["DownApp.swift"] // Entry point requires Xcode project
         )
     ]
 )
