@@ -2,10 +2,12 @@ import SwiftUI
 
 struct GroupDetailView: View {
     @StateObject private var viewModel: GroupDetailViewModel
-    @State private var navigationPath = NavigationPath()
+    @Environment(\.dismiss) private var dismiss
 
     init(group: DownGroup, currentUser: User) {
-        _viewModel = StateObject(wrappedValue: GroupDetailViewModel(group: group, currentUser: currentUser))
+        _viewModel = StateObject(
+            wrappedValue: GroupDetailViewModel(group: group, currentUser: currentUser)
+        )
     }
 
     var body: some View {
@@ -15,7 +17,7 @@ struct GroupDetailView: View {
             VStack(spacing: 0) {
                 NavHeader(
                     title: viewModel.group.name,
-                    onBack: nil, // NavigationStack handles back
+                    onBack: { dismiss() },
                     trailing: AnyView(NavIconButton(systemName: "gearshape") {})
                 )
 
@@ -30,7 +32,11 @@ struct GroupDetailView: View {
                 }
             }
         }
-        .task { await viewModel.loadEvents() }
+        // .onAppear (instead of .task) so events reload whenever the user
+        // navigates back from CreateEvent / VotingView / RSVPView.
+        .onAppear {
+            Task { await viewModel.loadEvents() }
+        }
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
@@ -93,9 +99,7 @@ struct GroupDetailView: View {
                     .foregroundStyle(Color.textOnBlueMuted)
                 Spacer()
 
-                NavigationLink(
-                    value: AppRoute.createEvent(viewModel.group)
-                ) {
+                NavigationLink(value: AppRoute.createEvent(viewModel.group)) {
                     HStack(spacing: 4) {
                         Image(systemName: "plus")
                         Text("Suggest")
@@ -175,5 +179,17 @@ struct GroupDetailView: View {
 #Preview {
     NavigationStack {
         GroupDetailView(group: MockGroups.fridaySquad, currentUser: MockUsers.currentUser)
+            .navigationDestination(for: AppRoute.self) { route in
+                switch route {
+                case .groupDetail(let g):
+                    GroupDetailView(group: g, currentUser: MockUsers.currentUser)
+                case .createEvent(let g):
+                    CreateEventView(group: g, currentUser: MockUsers.currentUser) { _ in }
+                case .voting(let e, _):
+                    VotingView(event: e, currentUser: MockUsers.currentUser) { _ in }
+                case .rsvp(let e, let g):
+                    RSVPView(event: e, currentUser: MockUsers.currentUser, groupMembers: g.members) { _ in }
+                }
+            }
     }
 }

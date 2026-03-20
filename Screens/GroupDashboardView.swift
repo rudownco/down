@@ -2,10 +2,16 @@ import SwiftUI
 
 struct GroupDashboardView: View {
     @StateObject private var viewModel: GroupDashboardViewModel
-    @State private var showCreateGroup = false
+    let onLogout: () -> Void
 
-    init(currentUser: User) {
-        _viewModel = StateObject(wrappedValue: GroupDashboardViewModel(currentUser: currentUser))
+    @State private var showCreateGroup       = false
+    @State private var showLogoutConfirmation = false
+
+    init(currentUser: User, onLogout: @escaping () -> Void = {}) {
+        _viewModel = StateObject(
+            wrappedValue: GroupDashboardViewModel(currentUser: currentUser)
+        )
+        self.onLogout = onLogout
     }
 
     var body: some View {
@@ -13,18 +19,15 @@ struct GroupDashboardView: View {
             LinearGradient.appBackground.ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header
+                // Header — profile menu with sign-out
                 NavHeader(
                     title: "My Crews",
-                    trailing: AnyView(NavIconButton(systemName: "magnifyingglass") {})
+                    trailing: AnyView(profileMenu)
                 )
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: Spacing.lg) {
-                        // Greeting
                         greetingSection
-
-                        // Group list
                         groupListSection
                     }
                     .padding(.horizontal, Spacing.md)
@@ -33,13 +36,47 @@ struct GroupDashboardView: View {
                 }
             }
 
-            // Floating Action Button
             fabButton
         }
         .task { await viewModel.loadGroups() }
+        // MARK: Create-group sheet
+        .sheet(isPresented: $showCreateGroup) {
+            CreateGroupView(currentUser: viewModel.currentUser) { newGroup in
+                viewModel.addGroup(newGroup)
+            }
+        }
+        // MARK: Logout confirmation
+        .alert("Sign Out", isPresented: $showLogoutConfirmation) {
+            Button("Sign Out", role: .destructive) {
+                withAnimation(.easeInOut(duration: 0.3)) { onLogout() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Are you sure you want to sign out?")
+        }
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+    }
+
+    // MARK: Profile menu (trailing nav button)
+    private var profileMenu: some View {
+        Menu {
+            Section(viewModel.currentUser.name) {
+                Button(role: .destructive) {
+                    showLogoutConfirmation = true
+                } label: {
+                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                }
+            }
+        } label: {
+            Image(systemName: "person.circle")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Color.textOnBlue)
+                .frame(width: 40, height: 40)
+                .background(Color.overlayPanel)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+        }
     }
 
     // MARK: Greeting
@@ -49,9 +86,13 @@ struct GroupDashboardView: View {
                 Text("\(viewModel.greeting) 👋")
                     .font(AppFont.subhead())
                     .foregroundStyle(Color.textOnBlueMuted)
-                Text(viewModel.currentUser.name.components(separatedBy: " ").first ?? viewModel.currentUser.name)
-                    .font(AppFont.title1())
-                    .foregroundStyle(Color.textOnBlue)
+                Text(
+                    viewModel.currentUser.name
+                        .components(separatedBy: " ").first
+                        ?? viewModel.currentUser.name
+                )
+                .font(AppFont.title1())
+                .foregroundStyle(Color.textOnBlue)
             }
             Spacer()
         }
@@ -69,6 +110,8 @@ struct GroupDashboardView: View {
                         .shimmer()
                 }
             }
+        } else if viewModel.groups.isEmpty {
+            emptyGroupsView
         } else {
             VStack(spacing: Spacing.sm) {
                 ForEach(viewModel.groups) { group in
@@ -81,11 +124,26 @@ struct GroupDashboardView: View {
         }
     }
 
+    // MARK: Empty state
+    private var emptyGroupsView: some View {
+        VStack(spacing: Spacing.md) {
+            Text("🏝️")
+                .font(.system(size: 48))
+            Text("No crews yet")
+                .font(AppFont.headline())
+                .foregroundStyle(Color.textOnBlue)
+            Text("Tap + to create your first crew!")
+                .font(AppFont.callout())
+                .foregroundStyle(Color.textOnBlueMuted)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(Spacing.xxl)
+        .overlayCard(cornerRadius: Radius.xxl)
+    }
+
     // MARK: FAB
     private var fabButton: some View {
-        Button {
-            showCreateGroup = true
-        } label: {
+        Button { showCreateGroup = true } label: {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(Color.appBackground)
@@ -108,9 +166,9 @@ private struct ShimmerModifier: ViewModifier {
             .overlay(
                 LinearGradient(
                     gradient: Gradient(stops: [
-                        .init(color: .clear, location: phase - 0.3),
-                        .init(color: Color(white: 1, opacity: 0.15), location: phase),
-                        .init(color: .clear, location: phase + 0.3),
+                        .init(color: .clear,                               location: phase - 0.3),
+                        .init(color: Color(white: 1, opacity: 0.15),      location: phase),
+                        .init(color: .clear,                               location: phase + 0.3),
                     ]),
                     startPoint: .leading,
                     endPoint: .trailing
@@ -128,9 +186,12 @@ private extension View {
     func shimmer() -> some View { modifier(ShimmerModifier()) }
 }
 
-// MARK: - Preview
+// MARK: - Previews
 #Preview {
     NavigationStack {
-        GroupDashboardView(currentUser: MockUsers.currentUser)
+        GroupDashboardView(currentUser: MockUsers.currentUser, onLogout: {})
+            .navigationDestination(for: DownGroup.self) { group in
+                GroupDetailView(group: group, currentUser: MockUsers.currentUser)
+            }
     }
 }

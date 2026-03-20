@@ -19,28 +19,34 @@ struct LoginView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                // Logo with drop animation
-                VStack(spacing: 0) {
-                    Text("r u")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color.textOnBlueMuted)
-                        .offset(y: showRU ? 0 : -120)
-                        .opacity(showRU ? 1 : 0)
+                // Logo with drop animation — scales to screen width
+                GeometryReader { geo in
+                    let width = geo.size.width - Spacing.md * 2
+                    VStack(spacing: 0) {
+                        Text("r u")
+                            .font(.system(size: width * 0.18, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.textOnBlueMuted)
+                            .offset(y: showRU ? 0 : -120)
+                            .opacity(showRU ? 1 : 0)
 
-                    Text("down?")
-                        .font(.system(size: 52, weight: .black, design: .rounded))
-                        .foregroundStyle(Color.textOnBlue)
-                        .offset(y: showDown ? 0 : -160)
-                        .opacity(showDown ? 1 : 0)
-                        .rotationEffect(.degrees(shakeDown ? 3 : 0))
+                        Text("down?")
+                            .font(.system(size: width * 0.26, weight: .black, design: .rounded))
+                            .foregroundStyle(Color.textOnBlue)
+                            .offset(y: showDown ? 0 : -160)
+                            .opacity(showDown ? 1 : 0)
+                            .rotationEffect(.degrees(shakeDown ? 3 : 0))
 
-                    Text("👇")
-                        .font(.system(size: 56))
-                        .padding(.top, Spacing.xs)
-                        .offset(y: showEmoji ? 0 : -200)
-                        .opacity(showEmoji ? 1 : 0)
-                        .offset(y: emojiLevitate ? -8 : 8)
+                        Text("👇")
+                            .font(.system(size: width * 0.22))
+                            .padding(.top, Spacing.xs)
+                            .offset(y: showEmoji ? 0 : -200)
+                            .opacity(showEmoji ? 1 : 0)
+                            .offset(y: emojiLevitate ? -8 : 8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
                 }
+                .aspectRatio(1.5, contentMode: .fit)
                 .multilineTextAlignment(.center)
 
                 Spacing.xxxl.spacer()
@@ -121,7 +127,7 @@ struct LoginView: View {
 
     // MARK: Google logo
     private var googleLogo: some View {
-        Image("GoogleLogo", bundle: .module)
+        Image("GoogleLogo", bundle: .main)
             .resizable()
             .renderingMode(.original)
             .frame(width: IconSize.md, height: IconSize.md)

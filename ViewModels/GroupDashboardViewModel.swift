@@ -25,6 +25,10 @@ final class GroupDashboardViewModel: ObservableObject {
         }
     }
 
+    func addGroup(_ group: DownGroup) {
+        groups.insert(group, at: 0)
+    }
+
     var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
