@@ -1,6 +1,7 @@
 import Foundation
 
 // MARK: - Service Protocol
+@MainActor
 protocol DownServiceProtocol {
     func fetchGroups(for userId: String) async throws -> [DownGroup]
     func fetchEvents(for groupId: String) async throws -> [EventSuggestion]
@@ -29,7 +30,8 @@ enum ServiceError: LocalizedError {
 }
 
 // MARK: - Mock Implementation
-final class MockDownService: DownServiceProtocol {
+@MainActor
+final class MockDownService: DownServiceProtocol, Sendable {
 
     // Simulate network latency
     private func delay(_ seconds: Double = 0.6) async {

@@ -4,12 +4,13 @@ A group event planning iOS app built with SwiftUI. Plan less. Vibe more.
 
 ## Requirements
 
-- iOS 17.0 or later
-- Xcode 15+
+- iOS 26.0 or later
+- Xcode 26+
+- Swift 6.2+
 
 ## Getting Started
 
-1. Create a new **iOS App** project in Xcode (SwiftUI lifecycle, iOS 17+)
+1. Create a new **iOS App** project in Xcode (SwiftUI lifecycle, iOS 26+)
 2. Delete the default `ContentView.swift`
 3. Add all source folders as groups in the Xcode project navigator:
    - `App/`, `DesignSystem/`, `Models/`, `Services/`, `MockData/`, `ViewModels/`, `Components/`, `Screens/`
@@ -67,7 +68,7 @@ Down/
 
 ## Architecture
 
-- **SwiftUI** (iOS 17+) with **MVVM**
+- **SwiftUI** (iOS 26+) with **MVVM**
 - `NavigationStack` + `AppRoute` enum for type-safe navigation
 - `DownServiceProtocol` — swap mock for real API with zero screen changes
 - `@MainActor` ViewModels for thread-safe UI updates
