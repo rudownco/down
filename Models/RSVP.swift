@@ -15,7 +15,7 @@ enum RSVPStatus: String, CaseIterable, Codable {
 
     var emoji: String {
         switch self {
-        case .going:    return "🙌"
+        case .going:    return "DOWN"
         case .maybe:    return "🤔"
         case .notGoing: return "😢"
         }

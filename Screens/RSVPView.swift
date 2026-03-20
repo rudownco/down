@@ -34,7 +34,9 @@ struct RSVPView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
         .alert("You're in! 🎉", isPresented: $viewModel.didSubmit) {
             Button("Sweet!") {
                 onConfirmed(viewModel.event)
@@ -57,7 +59,7 @@ struct RSVPView: View {
                         .font(.system(size: 40))
                     Text(viewModel.event.title)
                         .font(AppFont.title2())
-                        .foregroundStyle(.textPrimary)
+                        .foregroundStyle(Color.textPrimary)
                 }
                 Spacer()
                 EventStatusBadge(status: viewModel.event.status)
@@ -66,7 +68,7 @@ struct RSVPView: View {
             if let desc = viewModel.event.description {
                 Text(desc)
                     .font(AppFont.callout())
-                    .foregroundStyle(.textSecondary)
+                    .foregroundStyle(Color.textSecondary)
                     .lineLimit(3)
             }
 
@@ -93,11 +95,11 @@ struct RSVPView: View {
         HStack(spacing: Spacing.xs) {
             Image(systemName: icon)
                 .font(.system(size: IconSize.sm))
-                .foregroundStyle(.accentBlue)
+                .foregroundStyle(Color.accentBlue)
                 .frame(width: 20)
             Text(value)
                 .font(AppFont.footnote())
-                .foregroundStyle(.textSecondary)
+                .foregroundStyle(Color.textSecondary)
                 .lineLimit(2)
             Spacer()
         }
@@ -109,9 +111,9 @@ struct RSVPView: View {
     // MARK: RSVP selector section
     private var rsvpSection: some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
-            Text("Are you in? 🤙")
+            Text("Are you down? 👇")
                 .font(AppFont.title3())
-                .foregroundStyle(.textOnBlue)
+                .foregroundStyle(Color.textOnBlue)
 
             RSVPSelector(selectedStatus: $viewModel.selectedStatus)
         }
@@ -128,7 +130,7 @@ struct RSVPView: View {
             VStack(alignment: .leading, spacing: Spacing.sm) {
                 Text("Who's who")
                     .font(AppFont.subhead())
-                    .foregroundStyle(.textOnBlueMuted)
+                    .foregroundStyle(Color.textOnBlueMuted)
 
                 VStack(spacing: Spacing.xs) {
                     if !going.isEmpty    { attendeeRow(status: .going,    users: going) }
@@ -148,7 +150,7 @@ struct RSVPView: View {
 
             Text(status.label)
                 .font(AppFont.subhead())
-                .foregroundStyle(.textSecondary)
+                .foregroundStyle(Color.textSecondary)
                 .frame(width: 56, alignment: .leading)
 
             // Chips
@@ -157,7 +159,7 @@ struct RSVPView: View {
                     ForEach(users) { user in
                         Text(user.name.components(separatedBy: " ").first ?? user.name)
                             .font(AppFont.caption())
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color.white)
                             .padding(.horizontal, Spacing.xs)
                             .padding(.vertical, 4)
                             .background(user.avatarColor)

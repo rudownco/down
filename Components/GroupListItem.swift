@@ -19,7 +19,7 @@ struct GroupListItem: View {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(group.name)
                     .font(AppFont.headline())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
                     .lineLimit(1)
 
                 HStack(spacing: Spacing.xs) {
@@ -32,7 +32,7 @@ struct GroupListItem: View {
 
                     Text(group.memberCountLabel)
                         .font(AppFont.caption())
-                        .foregroundStyle(.textOnBlueMuted)
+                        .foregroundStyle(Color.textOnBlueMuted)
                 }
             }
 
@@ -43,7 +43,7 @@ struct GroupListItem: View {
                 if group.unreadCount > 0 {
                     Text("\(group.unreadCount)")
                         .font(AppFont.caption2())
-                        .foregroundStyle(.appBackground)
+                        .foregroundStyle(Color.appBackground)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
                         .background(Color.white)
@@ -52,7 +52,7 @@ struct GroupListItem: View {
 
                 Text(group.lastActivity)
                     .font(AppFont.caption())
-                    .foregroundStyle(.textOnBlueFaint)
+                    .foregroundStyle(Color.textOnBlueFaint)
             }
         }
         .padding(Spacing.md)

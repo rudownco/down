@@ -50,12 +50,12 @@ struct EventSuggestionCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(event.title)
                         .font(AppFont.title3())
-                        .foregroundStyle(.textPrimary)
+                        .foregroundStyle(Color.textPrimary)
                         .lineLimit(1)
 
                     Text("by \(event.suggestedBy.name)")
                         .font(AppFont.caption())
-                        .foregroundStyle(.textSecondary)
+                        .foregroundStyle(Color.textSecondary)
                 }
 
                 Spacer()
@@ -67,7 +67,7 @@ struct EventSuggestionCard: View {
             if let desc = event.description {
                 Text(desc)
                     .font(AppFont.callout())
-                    .foregroundStyle(.textSecondary)
+                    .foregroundStyle(Color.textSecondary)
                     .lineLimit(2)
             }
 
@@ -87,7 +87,7 @@ struct EventSuggestionCard: View {
                     }
                 }
                 .font(AppFont.caption())
-                .foregroundStyle(.textSecondary)
+                .foregroundStyle(Color.textSecondary)
                 .labelStyle(.titleAndIcon)
             }
 
@@ -109,17 +109,17 @@ struct EventSuggestionCard: View {
         HStack {
             Image(systemName: "hand.raised.fill")
                 .font(.system(size: IconSize.sm))
-                .foregroundStyle(.statusVotingFg)
+                .foregroundStyle(Color.statusVotingFg)
 
             Text("\(event.totalVoters) vote\(event.totalVoters == 1 ? "" : "s") cast")
                 .font(AppFont.subhead())
-                .foregroundStyle(.textSecondary)
+                .foregroundStyle(Color.textSecondary)
 
             Spacer()
 
             Text("Tap to vote")
                 .font(AppFont.caption())
-                .foregroundStyle(.accentBlue)
+                .foregroundStyle(Color.accentBlue)
         }
     }
 
@@ -131,7 +131,7 @@ struct EventSuggestionCard: View {
             if !event.attendees.isEmpty {
                 Text("\(event.attendees.count) going")
                     .font(AppFont.subhead())
-                    .foregroundStyle(.textSecondary)
+                    .foregroundStyle(Color.textSecondary)
             }
 
             Spacer()

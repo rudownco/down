@@ -11,7 +11,7 @@ struct NavHeader: View {
             // Centered title
             Text(title)
                 .font(AppFont.headline())
-                .foregroundStyle(.textOnBlue)
+                .foregroundStyle(Color.textOnBlue)
                 .lineLimit(1)
 
             HStack {
@@ -20,7 +20,7 @@ struct NavHeader: View {
                     Button(action: onBack) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(.textOnBlue)
+                            .foregroundStyle(Color.textOnBlue)
                             .frame(width: 40, height: 40)
                             .background(Color.overlayPanel)
                             .clipShape(RoundedRectangle(cornerRadius: Radius.md))
@@ -53,7 +53,7 @@ struct NavIconButton: View {
         Button(action: action) {
             Image(systemName: systemName)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundStyle(.textOnBlue)
+                .foregroundStyle(Color.textOnBlue)
                 .frame(width: 40, height: 40)
                 .background(Color.overlayPanel)
                 .clipShape(RoundedRectangle(cornerRadius: Radius.md))

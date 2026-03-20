@@ -30,10 +30,10 @@ struct VoteRow: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(option.date)
                             .font(AppFont.subhead())
-                            .foregroundStyle(isSelected ? .accentBlue : .textPrimary)
+                            .foregroundStyle(isSelected ? Color.accentBlue : Color.textPrimary)
                         Text(option.time)
                             .font(AppFont.footnote())
-                            .foregroundStyle(isSelected ? .accentBlue.opacity(0.7) : .textSecondary)
+                            .foregroundStyle(isSelected ? Color.accentBlue.opacity(0.7) : Color.textSecondary)
                     }
 
                     Spacer()
@@ -42,7 +42,7 @@ struct VoteRow: View {
                         AvatarStack(users: option.voters, maxVisible: 3, size: AvatarSize.xs, borderColor: .white)
                         Text("\(option.votes)")
                             .font(AppFont.subhead())
-                            .foregroundStyle(isSelected ? .accentBlue : .textSecondary)
+                            .foregroundStyle(isSelected ? Color.accentBlue : Color.textSecondary)
                     }
                 }
 

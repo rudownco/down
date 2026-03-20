@@ -29,7 +29,9 @@ struct VotingView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
         .alert("Votes submitted! 🎉", isPresented: $viewModel.didSubmit) {
             Button("Back to group") {
                 onVoted(viewModel.event)
@@ -50,12 +52,12 @@ struct VotingView: View {
             VStack(alignment: .leading, spacing: Spacing.xs) {
                 Text(viewModel.event.title)
                     .font(AppFont.title3())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
 
                 if let desc = viewModel.event.description {
                     Text(desc)
                         .font(AppFont.callout())
-                        .foregroundStyle(.textOnBlueMuted)
+                        .foregroundStyle(Color.textOnBlueMuted)
                         .lineLimit(2)
                 }
 
@@ -66,7 +68,7 @@ struct VotingView: View {
                     Label("\(viewModel.event.totalVoters) voters", systemImage: "person.2")
                 }
                 .font(AppFont.caption())
-                .foregroundStyle(.textOnBlueFaint)
+                .foregroundStyle(Color.textOnBlueFaint)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,10 +81,10 @@ struct VotingView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("📅 Pick your times")
                     .font(AppFont.headline())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
                 Text("Select all times that work for you")
                     .font(AppFont.footnote())
-                    .foregroundStyle(.textOnBlueMuted)
+                    .foregroundStyle(Color.textOnBlueMuted)
             }
 
             VStack(spacing: Spacing.sm) {

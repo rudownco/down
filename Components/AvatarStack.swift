@@ -45,7 +45,7 @@ struct AvatarStack: View {
 
             Text("+\(overflow)")
                 .font(.system(size: size * 0.32, weight: .bold, design: .rounded))
-                .foregroundStyle(.textSecondary)
+                .foregroundStyle(Color.textSecondary)
         }
     }
 }

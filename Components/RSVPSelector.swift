@@ -13,7 +13,7 @@ private struct RSVPOptionButton: View {
                     .font(.system(size: 32))
                 Text(status.label)
                     .font(AppFont.subhead())
-                    .foregroundStyle(isSelected ? .accentBlue : .textPrimary)
+                    .foregroundStyle(isSelected ? Color.accentBlue : Color.textPrimary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Spacing.md)
@@ -58,7 +58,7 @@ struct RSVPSelector: View {
     VStack(spacing: Spacing.xl) {
         RSVPSelector(selectedStatus: $selection)
         Text("Selected: \(selection?.label ?? "none")")
-            .foregroundStyle(.textOnBlue)
+            .foregroundStyle(Color.textOnBlue)
     }
     .padding()
     .background(LinearGradient.appBackground)

@@ -37,7 +37,9 @@ struct GroupDashboardView: View {
             fabButton
         }
         .task { await viewModel.loadGroups() }
-        .navigationBarHidden(true)
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
     }
 
     // MARK: Greeting
@@ -46,10 +48,10 @@ struct GroupDashboardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(viewModel.greeting) 👋")
                     .font(AppFont.subhead())
-                    .foregroundStyle(.textOnBlueMuted)
+                    .foregroundStyle(Color.textOnBlueMuted)
                 Text(viewModel.currentUser.name.components(separatedBy: " ").first ?? viewModel.currentUser.name)
                     .font(AppFont.title1())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
             }
             Spacer()
         }
@@ -86,7 +88,7 @@ struct GroupDashboardView: View {
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.appBackground)
+                .foregroundStyle(Color.appBackground)
                 .frame(width: 56, height: 56)
                 .background(Color.white)
                 .clipShape(Circle())

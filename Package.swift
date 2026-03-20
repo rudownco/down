@@ -7,7 +7,8 @@ import PackageDescription
 let package = Package(
     name: "Down",
     platforms: [
-        .iOS(.v17)
+        .iOS(.v17),
+        .macOS(.v14)
     ],
     products: [
         .library(name: "Down", targets: ["Down"])
@@ -15,8 +16,27 @@ let package = Package(
     targets: [
         .target(
             name: "Down",
-            path: "App",
-            exclude: ["DownApp.swift"] // Entry point requires Xcode project
+            path: ".",
+            exclude: [
+                "App/DownApp.swift", // Entry point requires Xcode project
+                "Package.swift",
+                "README.md",
+                ".build"
+            ],
+            sources: [
+                "App/AppRoute.swift",
+                "App/RootView.swift",
+                "Components",
+                "DesignSystem",
+                "MockData",
+                "Models",
+                "Screens",
+                "Services",
+                "ViewModels"
+            ],
+            resources: [
+                .process("Resources/Assets.xcassets")
+            ]
         )
     ]
 )

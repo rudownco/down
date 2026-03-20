@@ -29,7 +29,9 @@ struct CreateEventView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
     }
 
     // MARK: Main form card
@@ -48,7 +50,7 @@ struct CreateEventView: View {
                     Text("✏️").font(.system(size: 20)).frame(width: 24)
                     TextField("Description (optional)", text: $viewModel.description, axis: .vertical)
                         .font(AppFont.body())
-                        .foregroundStyle(.textPrimary)
+                        .foregroundStyle(Color.textPrimary)
                         .lineLimit(3...6)
                 }
                 .padding(.horizontal, Spacing.md)
@@ -63,7 +65,7 @@ struct CreateEventView: View {
             Text(emoji).font(.system(size: 20)).frame(width: 24)
             TextField(placeholder, text: text)
                 .font(AppFont.body())
-                .foregroundStyle(.textPrimary)
+                .foregroundStyle(Color.textPrimary)
         }
         .padding(.horizontal, Spacing.md)
         .padding(.vertical, Spacing.sm + 2)
@@ -75,13 +77,13 @@ struct CreateEventView: View {
             HStack {
                 Text("📅 When?")
                     .font(AppFont.headline())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
                 Text("(add a few options)")
                     .font(AppFont.callout())
-                    .foregroundStyle(.textOnBlueMuted)
+                    .foregroundStyle(Color.textOnBlueMuted)
             }
 
-            VStack(spacing: Spacing.sm) {
+            VStack(spacing: Spacing.md) {
                 ForEach($viewModel.timeOptions) { $option in
                     TimeOptionRow(option: $option, canRemove: viewModel.timeOptions.count > 1) {
                         viewModel.removeTimeOption(id: option.id)
@@ -98,7 +100,7 @@ struct CreateEventView: View {
                     Text("Add another time")
                 }
                 .font(AppFont.subhead())
-                .foregroundStyle(.textOnBlue)
+                .foregroundStyle(Color.textOnBlue)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, Spacing.sm)
                 .background(Color.overlayPanel)
@@ -141,33 +143,68 @@ private struct TimeOptionRow: View {
     let canRemove: Bool
     let onRemove: () -> Void
 
+    private var selectedDayFormatted: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
+        return formatter.string(from: option.date)
+    }
+
     var body: some View {
-        HStack(spacing: Spacing.sm) {
-            VStack(spacing: Spacing.xs) {
-                DatePicker("", selection: $option.date, displayedComponents: .date)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(spacing: 0) {
+            // Header with selected date summary + remove button
+            HStack {
+                Text(selectedDayFormatted)
+                    .font(AppFont.subhead())
+                    .foregroundStyle(Color.accentBlue)
+
+                Spacer()
+
+                if canRemove {
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(Color.textTertiary)
+                    }
+                }
+            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.top, Spacing.md)
+            .padding(.bottom, Spacing.xs)
+
+            // Calendar
+            DatePicker("", selection: $option.date, displayedComponents: .date)
+                .datePickerStyle(.graphical)
+                .labelsHidden()
+                .tint(Color.accentBlue)
+                .padding(.horizontal, Spacing.xs)
+
+            Divider()
+                .background(Color.divider)
+                .padding(.horizontal, Spacing.md)
+
+            // Time row
+            HStack(spacing: Spacing.sm) {
+                Image(systemName: "clock.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color.accentBlue)
+
+                Text("Time")
+                    .font(AppFont.subhead())
+                    .foregroundStyle(Color.textSecondary)
+
+                Spacer()
 
                 DatePicker("", selection: $option.time, displayedComponents: .hourAndMinute)
                     .datePickerStyle(.compact)
                     .labelsHidden()
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .tint(Color.accentBlue)
             }
-            .padding(Spacing.sm)
-            .background(Color.cardBackgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
-            .frame(maxWidth: .infinity)
-
-            if canRemove {
-                Button(action: onRemove) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Color.textSecondary)
-                }
-            }
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm)
         }
-        .appCard(padding: Spacing.sm, cornerRadius: Radius.xl)
+        .background(Color.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.xxl))
+        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
     }
 }
 

@@ -14,7 +14,7 @@ struct AvatarView: View {
 
             Text(user.initials)
                 .font(.system(size: size * 0.36, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.white)
         }
         .frame(width: size, height: size)
         .overlay(

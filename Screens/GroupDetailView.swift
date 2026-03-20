@@ -31,7 +31,9 @@ struct GroupDetailView: View {
             }
         }
         .task { await viewModel.loadEvents() }
-        .navigationBarHidden(true)
+        #if os(iOS)
+        .toolbar(.hidden, for: .navigationBar)
+        #endif
     }
 
     // MARK: Members section
@@ -39,7 +41,7 @@ struct GroupDetailView: View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             Text("Members")
                 .font(AppFont.subhead())
-                .foregroundStyle(.textOnBlueMuted)
+                .foregroundStyle(Color.textOnBlueMuted)
                 .padding(.horizontal, 2)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -59,7 +61,7 @@ struct GroupDetailView: View {
             AvatarView(user: user, size: AvatarSize.md, borderColor: .white, borderWidth: 2)
             Text(user.name.components(separatedBy: " ").first ?? user.name)
                 .font(AppFont.caption2())
-                .foregroundStyle(.textOnBlueMuted)
+                .foregroundStyle(Color.textOnBlueMuted)
                 .lineLimit(1)
         }
         .frame(width: 52)
@@ -73,11 +75,11 @@ struct GroupDetailView: View {
                     .frame(width: AvatarSize.md, height: AvatarSize.md)
                 Image(systemName: "plus")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
             }
             Text("Invite")
                 .font(AppFont.caption2())
-                .foregroundStyle(.textOnBlueMuted)
+                .foregroundStyle(Color.textOnBlueMuted)
         }
         .frame(width: 52)
     }
@@ -88,7 +90,7 @@ struct GroupDetailView: View {
             HStack {
                 Text("Events")
                     .font(AppFont.subhead())
-                    .foregroundStyle(.textOnBlueMuted)
+                    .foregroundStyle(Color.textOnBlueMuted)
                 Spacer()
 
                 NavigationLink(
@@ -99,7 +101,7 @@ struct GroupDetailView: View {
                         Text("Suggest")
                     }
                     .font(AppFont.subhead())
-                    .foregroundStyle(.textOnBlue)
+                    .foregroundStyle(Color.textOnBlue)
                     .padding(.horizontal, Spacing.sm)
                     .padding(.vertical, Spacing.xxs + 2)
                     .background(Color.overlayPanel)
@@ -158,10 +160,10 @@ struct GroupDetailView: View {
                 .font(.system(size: 48))
             Text("No events yet")
                 .font(AppFont.headline())
-                .foregroundStyle(.textOnBlue)
+                .foregroundStyle(Color.textOnBlue)
             Text("Suggest something fun for the crew!")
                 .font(AppFont.callout())
-                .foregroundStyle(.textOnBlueMuted)
+                .foregroundStyle(Color.textOnBlueMuted)
         }
         .frame(maxWidth: .infinity)
         .padding(Spacing.xxl)
