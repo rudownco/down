@@ -16,7 +16,7 @@ struct AvatarStack: View {
         HStack(spacing: 0) {
             ZStack(alignment: .leading) {
                 ForEach(Array(visible.enumerated()), id: \.element.id) { index, user in
-                    AvatarView(user: user, size: size, borderColor: borderColor, borderWidth: 2)
+                    AvatarLogo(user: user, size: size, borderColor: borderColor, borderWidth: 2)
                         .offset(x: CGFloat(index) * (size - overlap))
                         .zIndex(Double(visible.count - index))
                 }

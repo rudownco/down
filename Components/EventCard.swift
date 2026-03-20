@@ -36,7 +36,7 @@ struct EventStatusBadge: View {
 }
 
 // MARK: - Event Suggestion Card
-struct EventSuggestionCard: View {
+struct EventCard: View {
     let event: EventSuggestion
 
     var body: some View {
@@ -143,9 +143,9 @@ struct EventSuggestionCard: View {
 #Preview {
     ScrollView {
         VStack(spacing: Spacing.sm) {
-            EventSuggestionCard(event: MockEvents.pizzaNight)
-            EventSuggestionCard(event: MockEvents.movieMarathon)
-            EventSuggestionCard(event: MockEvents.coffeeRun)
+            EventCard(event: MockEvents.pizzaNight)
+            EventCard(event: MockEvents.movieMarathon)
+            EventCard(event: MockEvents.coffeeRun)
         }
         .padding()
     }

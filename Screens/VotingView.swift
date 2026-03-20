@@ -89,7 +89,7 @@ struct VotingView: View {
 
             VStack(spacing: Spacing.sm) {
                 ForEach(viewModel.event.votingOptions) { option in
-                    VoteRow(
+                    VoteList(
                         option: option,
                         totalVoters: max(1, viewModel.event.totalVoters),
                         isSelected: viewModel.isSelected(option.id),

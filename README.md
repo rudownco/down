@@ -48,12 +48,12 @@ Down/
 │   ├── VotingViewModel.swift
 │   └── RSVPViewModel.swift
 ├── Components/
-│   ├── AvatarView.swift
+│   ├── AvatarLogo.swift
 │   ├── AvatarStack.swift
 │   ├── NavHeader.swift
 │   ├── GroupListItem.swift
-│   ├── EventSuggestionCard.swift
-│   ├── VoteRow.swift
+│   ├── EventCard.swift
+│   ├── VoteList.swift
 │   └── RSVPSelector.swift
 ├── Screens/
 │   ├── LoginView.swift

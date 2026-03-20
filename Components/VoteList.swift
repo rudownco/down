@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Individual Voting Option Row
-struct VoteRow: View {
+struct VoteList: View {
     let option: VotingOption
     let totalVoters: Int
     let isSelected: Bool
@@ -81,21 +81,21 @@ struct VoteRow: View {
 // MARK: - Preview
 #Preview {
     VStack(spacing: Spacing.sm) {
-        VoteRow(
+        VoteList(
             option: MockVotingOptions.pizzaOptions[0],
             totalVoters: 7,
             isSelected: true,
             isLeading: false,
             onTap: {}
         )
-        VoteRow(
+        VoteList(
             option: MockVotingOptions.pizzaOptions[1],
             totalVoters: 7,
             isSelected: false,
             isLeading: true,
             onTap: {}
         )
-        VoteRow(
+        VoteList(
             option: MockVotingOptions.pizzaOptions[2],
             totalVoters: 7,
             isSelected: false,

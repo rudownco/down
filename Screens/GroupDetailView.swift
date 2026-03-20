@@ -58,7 +58,7 @@ struct GroupDetailView: View {
 
     private func memberChip(_ user: User) -> some View {
         VStack(spacing: Spacing.xxs) {
-            AvatarView(user: user, size: AvatarSize.md, borderColor: .white, borderWidth: 2)
+            AvatarLogo(user: user, size: AvatarSize.md, borderColor: .white, borderWidth: 2)
             Text(user.name.components(separatedBy: " ").first ?? user.name)
                 .font(AppFont.caption2())
                 .foregroundStyle(Color.textOnBlueMuted)
@@ -139,7 +139,7 @@ struct GroupDetailView: View {
         }()
 
         NavigationLink(value: route) {
-            EventSuggestionCard(event: event)
+            EventCard(event: event)
         }
         .buttonStyle(.plain)
     }

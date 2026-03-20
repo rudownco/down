@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Single Avatar
-struct AvatarView: View {
+struct AvatarLogo: View {
     let user: User
     var size: CGFloat = AvatarSize.sm
     var borderColor: Color = .clear
@@ -27,10 +27,10 @@ struct AvatarView: View {
 // MARK: - Preview
 #Preview {
     HStack(spacing: 12) {
-        AvatarView(user: MockUsers.alex, size: AvatarSize.xs)
-        AvatarView(user: MockUsers.jamie, size: AvatarSize.sm)
-        AvatarView(user: MockUsers.taylor, size: AvatarSize.md)
-        AvatarView(user: MockUsers.morgan, size: AvatarSize.lg)
+        AvatarLogo(user: MockUsers.alex, size: AvatarSize.xs)
+        AvatarLogo(user: MockUsers.jamie, size: AvatarSize.sm)
+        AvatarLogo(user: MockUsers.taylor, size: AvatarSize.md)
+        AvatarLogo(user: MockUsers.morgan, size: AvatarSize.lg)
     }
     .padding()
     .background(Color.appBackground)
