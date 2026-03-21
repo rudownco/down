@@ -4,6 +4,7 @@ struct CreateEventView: View {
     @StateObject private var viewModel: CreateEventViewModel
     @Environment(\.dismiss) private var dismiss
     let onCreated: (EventSuggestion) -> Void
+    @State private var dateText: String = ""
 
     init(group: DownGroup, currentUser: User, onCreated: @escaping (EventSuggestion) -> Void) {
         _viewModel = StateObject(wrappedValue: CreateEventViewModel(group: group, currentUser: currentUser))
@@ -29,88 +30,40 @@ struct CreateEventView: View {
                     .padding(.horizontal, Spacing.md)
 
                     // MARK: Page header
-                    Text("Suggest Event")
+                    Text("Create a Plan")
                         .font(AppFont.title1())
                         .foregroundStyle(Color.textOnBlue)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, Spacing.md)
 
                     // MARK: White card
-                    VStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: Spacing.lg) {
 
-                        // Section 1 — Event name
-                        formSection(icon: "sparkles", heading: "What's the plan?") {
-                            TextField(
-                                "Movie night, brunch, hike…",
-                                text: $viewModel.title
-                            )
-                            .font(AppFont.body())
-                            .foregroundStyle(Color.textPrimary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm + 2)
-                            .background(Color.inputBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Radius.lg)
-                                    .stroke(Color.inputBorder, lineWidth: 1)
-                            )
+                        // Section 1 — Plan name (required)
+                        formSection(heading: "What's the move?", tag: "Required") {
+                            styledTextField("Game night, brunch, etc.", text: $viewModel.title)
                         }
 
-                        cardDivider
-
-                        // Section 2 — Location
-                        formSection(icon: "mappin.and.ellipse", heading: "Where at?", isOptional: true) {
-                            TextField(
-                                "Your place, the park, TBD…",
-                                text: $viewModel.location
-                            )
-                            .font(AppFont.body())
-                            .foregroundStyle(Color.textPrimary)
-                            .padding(.horizontal, Spacing.md)
-                            .padding(.vertical, Spacing.sm + 2)
-                            .background(Color.inputBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Radius.lg)
-                                    .stroke(Color.inputBorder, lineWidth: 1)
-                            )
+                        // Section 2 — Location (optional)
+                        formSection(icon: "mappin.and.ellipse", heading: "Addy?", tag: "Optional") {
+                            styledTextField("Where are we meeting?", text: $viewModel.location)
                         }
 
-                        cardDivider
-
-                        // Section 3 — When (time options)
-                        formSection(icon: "calendar", heading: "When?", subLabel: "add a few options") {
-                            VStack(spacing: Spacing.md) {
-                                ForEach($viewModel.timeOptions) { $option in
-                                    TimeOptionRow(
-                                        option: $option,
-                                        canRemove: viewModel.timeOptions.count > 1
-                                    ) {
-                                        viewModel.removeTimeOption(id: option.id)
-                                    }
+                        // Section 3 — Date (optional)
+                        formSection(icon: "calendar", heading: "When?", tag: "Optional") {
+                            styledTextField("MM/DD/YYYY", text: $dateText)
+                                #if os(iOS)
+                                .keyboardType(.numbersAndPunctuation)
+                                #endif
+                                .onChange(of: dateText) { _, newValue in
+                                    parseDateInput(newValue)
                                 }
-
-                                Button { viewModel.addTimeOption() } label: {
-                                    HStack(spacing: Spacing.xs) {
-                                        Image(systemName: "plus.circle.fill")
-                                        Text("Add another time")
-                                    }
-                                    .font(AppFont.subhead())
-                                    .foregroundStyle(Color.accentBlue)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, Spacing.sm)
-                                    .background(Color.accentBlueMuted)
-                                    .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
-                                }
-                            }
                         }
 
-                        cardDivider
-
-                        // Section 4 — Extra details
-                        formSection(icon: "info.circle", heading: "Any deets?", isOptional: true) {
+                        // Section 4 — Details (optional)
+                        formSection(heading: "Details", tag: "Optional") {
                             TextField(
-                                "Extra info, links, vibes…",
+                                "Add any extra info...",
                                 text: $viewModel.description,
                                 axis: .vertical
                             )
@@ -136,23 +89,30 @@ struct CreateEventView: View {
                                 }
                             }
                         } label: {
-                            Group {
-                                if viewModel.isSubmitting {
-                                    HStack(spacing: Spacing.sm) {
-                                        ProgressView().tint(Color.textOnBlue)
-                                        Text("Creating…")
-                                    }
-                                } else {
-                                    Text("🚀  Suggest It!")
+                            if viewModel.isSubmitting {
+                                HStack(spacing: Spacing.sm) {
+                                    ProgressView().tint(.white)
+                                    Text("Creating…")
+                                        .font(AppFont.headline())
+                                        .foregroundStyle(.white)
                                 }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, Spacing.md)
+                            } else {
+                                Text("Who's Down?")
+                                    .font(AppFont.headline())
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, Spacing.md)
                             }
                         }
-                        .appButtonStyle(.primary)
+                        .background(Color(red: 0.38, green: 0.44, blue: 0.55))
+                        .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
                         .disabled(!viewModel.canSubmit || viewModel.isSubmitting)
                         .opacity(viewModel.canSubmit ? 1.0 : 0.5)
-                        .padding(.top, Spacing.xs)
-                        .padding([.horizontal, .bottom], Spacing.lg)
+                        .padding(.top, Spacing.sm)
                     }
+                    .padding(Spacing.lg)
                     .background(Color.cardBackground)
                     .clipShape(RoundedRectangle(cornerRadius: Radius.xxl))
                     .shadow(color: Color.black.opacity(0.12), radius: 20, x: 0, y: 8)
@@ -169,120 +129,54 @@ struct CreateEventView: View {
 
     // MARK: Helpers
 
-    private var cardDivider: some View {
-        Divider()
-            .background(Color.divider)
-            .padding(.horizontal, Spacing.lg)
-    }
-
     @ViewBuilder
     private func formSection<Content: View>(
-        icon: String,
+        icon: String? = nil,
         heading: String,
-        isOptional: Bool = false,
-        subLabel: String? = nil,
+        tag: String? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: Spacing.sm) {
-            HStack(spacing: Spacing.sm) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentBlueMuted)
-                        .frame(width: 36, height: 36)
+            HStack(spacing: 4) {
+                if let icon {
                     Image(systemName: icon)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(Color.accentBlue)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(Color.textSecondary)
                 }
-                Text(heading)
-                    .font(AppFont.headline())
-                    .foregroundStyle(Color.textPrimary)
-                if isOptional {
-                    Text("(optional)")
-                        .font(AppFont.caption())
-                        .foregroundStyle(Color.textTertiary)
-                }
-                if let subLabel {
-                    Text("(\(subLabel))")
-                        .font(AppFont.caption())
+                Text(heading.uppercased())
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.textSecondary)
+                    .kerning(0.5)
+                if let tag {
+                    Text("(\(tag))")
+                        .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(Color.textTertiary)
                 }
             }
-
             content()
         }
-        .padding(.horizontal, Spacing.lg)
-        .padding(.vertical, Spacing.lg)
     }
-}
 
-// MARK: - Time Option Row (unchanged)
-private struct TimeOptionRow: View {
-    @Binding var option: TimeOptionInput
-    let canRemove: Bool
-    let onRemove: () -> Void
+    private func styledTextField(_ placeholder: String, text: Binding<String>) -> some View {
+        TextField(placeholder, text: text)
+            .font(AppFont.body())
+            .foregroundStyle(Color.textPrimary)
+            .padding(.horizontal, Spacing.md)
+            .padding(.vertical, Spacing.sm + 2)
+            .background(Color.inputBackground)
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
+            .overlay(
+                RoundedRectangle(cornerRadius: Radius.lg)
+                    .stroke(Color.inputBorder, lineWidth: 1)
+            )
+    }
 
-    private var selectedDayFormatted: String {
+    private func parseDateInput(_ text: String) {
         let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMM d"
-        return formatter.string(from: option.date)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text(selectedDayFormatted)
-                    .font(AppFont.subhead())
-                    .foregroundStyle(Color.accentBlue)
-
-                Spacer()
-
-                if canRemove {
-                    Button(action: onRemove) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(Color.textTertiary)
-                    }
-                }
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.top, Spacing.md)
-            .padding(.bottom, Spacing.xs)
-
-            DatePicker("", selection: $option.date, displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .labelsHidden()
-                .tint(Color.accentBlue)
-                .padding(.horizontal, Spacing.xs)
-
-            Divider()
-                .background(Color.divider)
-                .padding(.horizontal, Spacing.md)
-
-            HStack(spacing: Spacing.sm) {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color.accentBlue)
-
-                Text("Time")
-                    .font(AppFont.subhead())
-                    .foregroundStyle(Color.textSecondary)
-
-                Spacer()
-
-                DatePicker("", selection: $option.time, displayedComponents: .hourAndMinute)
-                    .datePickerStyle(.compact)
-                    .labelsHidden()
-                    .tint(Color.accentBlue)
-            }
-            .padding(.horizontal, Spacing.md)
-            .padding(.vertical, Spacing.sm)
+        formatter.dateFormat = "MM/dd/yyyy"
+        if let date = formatter.date(from: text) {
+            viewModel.timeOptions[0].date = date
         }
-        .background(Color.cardBackgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
-        .overlay(
-            RoundedRectangle(cornerRadius: Radius.xl)
-                .stroke(Color.inputBorder, lineWidth: 1)
-        )
     }
 }
 
