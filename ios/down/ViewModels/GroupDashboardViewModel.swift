@@ -10,7 +10,7 @@ final class GroupDashboardViewModel: ObservableObject {
     private let service: DownServiceProtocol
     let currentUser: User
 
-    init(currentUser: User, service: DownServiceProtocol = MockDownService()) {
+    init(currentUser: User, service: DownServiceProtocol = SupabaseService()) {
         self.currentUser = currentUser
         self.service     = service
     }

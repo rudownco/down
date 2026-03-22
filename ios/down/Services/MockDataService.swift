@@ -7,6 +7,7 @@ protocol DownServiceProtocol {
     func submitVotes(eventId: String, optionIds: [String], userId: String) async throws -> EventSuggestion
     func submitRSVP(eventId: String, status: RSVPStatus, userId: String) async throws -> RSVP
     func createEvent(_ event: EventSuggestion, in groupId: String) async throws -> EventSuggestion
+    func createGroup(name: String) async throws -> DownGroup
     func signIn(provider: AuthProvider) async throws -> User
 }
 
@@ -57,8 +58,7 @@ final class MockDownService: DownServiceProtocol, @unchecked Sendable {
     // MARK: - DownServiceProtocol
 
     func fetchGroups(for userId: String) async throws -> [DownGroup] {
-        await delay()
-        return MockGroups.all
+        return []
     }
 
     func fetchEvents(for groupId: String) async throws -> [EventSuggestion] {
@@ -108,6 +108,11 @@ final class MockDownService: DownServiceProtocol, @unchecked Sendable {
         await delay(0.8)
         createdEvents[groupId, default: []].insert(event, at: 0)
         return event
+    }
+
+    func createGroup(name: String) async throws -> DownGroup {
+        await delay(0.6)
+        return DownGroup(name: name)
     }
 
     func signIn(provider: AuthProvider) async throws -> User {

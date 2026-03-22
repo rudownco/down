@@ -125,7 +125,6 @@ struct LoginView: View {
         }
     }
 
-    // MARK: Google logo
     private var googleLogo: some View {
         Image("GoogleLogo", bundle: .main)
             .resizable()
@@ -133,7 +132,6 @@ struct LoginView: View {
             .frame(width: IconSize.md, height: IconSize.md)
     }
 
-    // MARK: Auth button builder
     private func authButton<Icon: View>(provider: AuthProvider, @ViewBuilder icon: () -> Icon) -> some View {
         let label = switch provider {
         case .apple: "Continue with Apple"
@@ -155,7 +153,6 @@ struct LoginView: View {
         .appButtonStyle(.card)
     }
 
-    // MARK: Loading overlay
     private var loadingOverlay: some View {
         ZStack {
             Color.black.opacity(0.35).ignoresSafeArea()
@@ -174,12 +171,10 @@ struct LoginView: View {
     }
 }
 
-// MARK: - CGFloat spacer helper
 private extension CGFloat {
     func spacer() -> some View { Spacer().frame(height: self) }
 }
 
-// MARK: - Preview
 #Preview {
     LoginView(onLogin: { _ in })
 }

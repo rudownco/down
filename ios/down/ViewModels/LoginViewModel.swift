@@ -8,7 +8,7 @@ final class LoginViewModel: ObservableObject {
 
     private let service: DownServiceProtocol
 
-    init(service: DownServiceProtocol = MockDownService()) {
+    init(service: DownServiceProtocol = SupabaseService()) {
         self.service = service
     }
 

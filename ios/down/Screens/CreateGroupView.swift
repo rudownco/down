@@ -9,6 +9,9 @@ struct CreateGroupView: View {
 
     @State private var groupName  = ""
     @State private var isCreating = false
+    @State private var error: String?
+
+    private let service: DownServiceProtocol = SupabaseService()
 
     private var canCreate: Bool {
         !groupName.trimmingCharacters(in: .whitespaces).isEmpty
@@ -102,23 +105,27 @@ struct CreateGroupView: View {
         #if os(iOS)
         .toolbar(.hidden, for: .navigationBar)
         #endif
+        .alert("Something went wrong", isPresented: .constant(error != nil)) {
+            Button("OK") { error = nil }
+        } message: {
+            Text(error ?? "")
+        }
     }
 
     // MARK: Create action
     private func handleCreate() {
         guard canCreate else { return }
         isCreating = true
-        let newGroup = DownGroup(
-            name: groupName.trimmingCharacters(in: .whitespaces),
-            members: [currentUser],
-            lastActivity: "just now",
-            unreadCount: 0
-        )
+        error = nil
         Task {
-            // Simulate service call
-            try? await Task.sleep(nanoseconds: 600_000_000)
-            onCreated(newGroup)
-            dismiss()
+            do {
+                let newGroup = try await service.createGroup(name: groupName.trimmingCharacters(in: .whitespaces))
+                onCreated(newGroup)
+                dismiss()
+            } catch {
+                self.error = error.localizedDescription
+                isCreating = false
+            }
         }
     }
 }

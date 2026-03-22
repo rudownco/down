@@ -1,20 +1,47 @@
 import SwiftUI
+import Supabase
 
 // MARK: - Root View
 // Manages the top-level authenticated / unauthenticated split and owns
 // the single NavigationStack with ALL route destinations registered here.
 struct RootView: View {
     @State private var currentUser: User?
+    @State private var isRestoringSession = true
+
+    private let authService = SupabaseService()
 
     var body: some View {
         Group {
-            if let user = currentUser {
+            if isRestoringSession {
+                Color.clear
+            } else if let user = currentUser {
                 authenticatedView(user: user)
             } else {
                 LoginView { user in
                     withAnimation(.easeInOut(duration: 0.3)) {
                         currentUser = user
                     }
+                }
+            }
+        }
+        .task {
+            if let restored = await authService.restoreSession() {
+                currentUser = restored
+            }
+            isRestoringSession = false
+        }
+        .onOpenURL { url in
+            Task {
+                guard let session = try? await supabase.auth.session(from: url) else { return }
+                supabase.functions.setAuth(token: session.accessToken)
+                let meta = session.user.userMetadata
+                let name: String = {
+                    if case .string(let v) = meta["full_name"] { return v }
+                    if case .string(let v) = meta["name"]      { return v }
+                    return session.user.email ?? "User"
+                }()
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    currentUser = User(id: session.user.id.uuidString, name: name)
                 }
             }
         }
