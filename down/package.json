@@ -9,10 +9,16 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo-google-fonts/be-vietnam-pro": "^0.4.1",
+    "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",
     "@hookform/resolvers": "^5.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@rn-primitives/slot": "^1.2.0",
+    "@rn-primitives/types": "^1.2.0",
     "@supabase/supabase-js": "^2.99.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
     "expo": "~55.0.8",
     "expo-apple-authentication": "~55.0.9",
@@ -25,21 +31,25 @@
     "expo-secure-store": "~55.0.9",
     "expo-status-bar": "~55.0.4",
     "expo-web-browser": "~55.0.10",
+    "nativewind": "^4.2.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.72.0",
     "react-native": "0.83.2",
+    "react-native-css-interop": "^0.2.3",
     "react-native-gesture-handler": "~2.30.0",
     "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.23.0",
     "react-native-svg": "15.15.3",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-preset-expo": "^55.0.12",
+    "tailwindcss": "^3.4.19",
     "typescript": "~5.9.2"
   },
   "private": true

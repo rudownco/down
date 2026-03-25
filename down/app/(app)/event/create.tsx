@@ -1,27 +1,36 @@
-// Create Event screen
-// Translated from ios/down/Screens/CreateEventView.swift
+// Create Event / New Hangout — matching Stitch export2
+// "The Social Sketchbook" aesthetic
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../src/theme/colors';
-import { Spacing, Radius } from '../../../src/theme/spacing';
-import { Typography } from '../../../src/theme/typography';
-import { useAuthStore } from '../../../src/stores/authStore';
-import { useEventStore } from '../../../src/stores/eventStore';
-import * as api from '../../../src/services/api';
-import { EventSuggestion, VotingOption } from '../../../src/types';
-import dayjs from 'dayjs';
+import React, { useState } from "react";
+import { View, Text, ScrollView, Pressable } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { CategoryPill } from "../../../components/CategoryPill";
+import { FilledInput } from "../../../components/FilledInput";
+import { JellybeanChip } from "../../../components/JellybeanChip";
+import { SketchCard } from "../../../components/SketchCard";
+import { BouncyButton } from "../../../components/BouncyButton";
+import { SectionLabel } from "../../../components/SectionLabel";
+import { useAuthStore } from "../../../src/stores/authStore";
+import { useEventStore } from "../../../src/stores/eventStore";
+import * as api from "../../../src/services/api";
+import { EventSuggestion, VotingOption } from "../../../src/types";
+import dayjs from "dayjs";
+
+const CATEGORIES = [
+  { label: "Food", emoji: "🍔", bg: "#FFEBB7", text: "#76574E" },
+  { label: "Drinks", emoji: "🍹", bg: "#E2F0D9", text: "#3E6842" },
+  { label: "Movie", emoji: "🍿", bg: "#F3E5F5", text: "#6A1B9A" },
+  { label: "Outdoors", emoji: "🌳", bg: "#E0F7FA", text: "#006064" },
+  { label: "Games", emoji: "🎮", bg: "#FFF9C4", text: "#F9A825" },
+];
+
+const DRESS_CODES = [
+  { label: "Chill / Casual", emoji: "👕" },
+  { label: "Fancy / Dressy", emoji: "✨" },
+  { label: "Themed", emoji: "🎭" },
+  { label: "Active", emoji: "👟" },
+];
 
 export default function CreateEventScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
@@ -29,10 +38,13 @@ export default function CreateEventScreen() {
   const { user } = useAuthStore();
   const { addEvent } = useEventStore();
 
-  const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('');
-  const [dateText, setDateText] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [location, setLocation] = useState("");
+  const [dateText, setDateText] = useState("");
+  const [timeText, setTimeText] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDressCode, setSelectedDressCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canSubmit = title.trim().length > 0;
@@ -41,18 +53,16 @@ export default function CreateEventScreen() {
     if (!canSubmit || !user || !groupId) return;
     setIsSubmitting(true);
 
-    // Parse date
     let formattedDate: string | undefined;
-    let formattedTime: string | undefined;
-    const parsed = dayjs(dateText, 'MM/DD/YYYY');
+    const parsed = dayjs(dateText, "MM/DD/YYYY");
     if (parsed.isValid()) {
-      formattedDate = parsed.format('dddd, MMM D');
+      formattedDate = parsed.format("dddd, MMM D");
     }
 
     const votingOption: VotingOption = {
       id: `vo-${Date.now()}`,
-      date: formattedDate ?? dayjs().add(1, 'day').format('dddd, MMM D'),
-      time: '7:00 PM',
+      date: formattedDate ?? dayjs().add(1, "day").format("dddd, MMM D"),
+      time: timeText || "7:00 PM",
       votes: 0,
       voters: [],
     };
@@ -62,7 +72,7 @@ export default function CreateEventScreen() {
       title: title.trim(),
       description: description || undefined,
       location: location || undefined,
-      status: 'voting',
+      status: "voting",
       attendees: [],
       suggestedBy: user,
       votingOptions: [votingOption],
@@ -79,226 +89,176 @@ export default function CreateEventScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={[Colors.appBackgroundDeep, Colors.appBackground]}
-      style={styles.container}
-    >
+    <View className="flex-1 bg-surface">
+      {/* Header */}
+      <View className="pt-14 px-6 pb-2 flex-row justify-between items-center">
+        <Pressable onPress={() => router.back()}>
+          <Ionicons name="close" size={24} color="#3F6377" />
+        </Pressable>
+        <Text className="font-heading-extrabold text-xl text-primary italic tracking-tighter -rotate-1">
+          new hangout!
+        </Text>
+        <View className="w-10 h-10 rounded-full bg-surface-container-highest" />
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 120, gap: 32 }}
+        className="px-6 pt-6"
       >
-        {/* Back button */}
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={17} color={Colors.textOnBlue} />
-        </Pressable>
+        {/* Section: What */}
+        <View className="gap-4">
+          <Text className="font-heading text-2xl text-primary tracking-tight">
+            what are we doing?
+          </Text>
 
-        {/* Page header */}
-        <Text style={styles.pageTitle}>Create a Plan</Text>
+          {/* Category pills */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10 }}
+          >
+            {CATEGORIES.map((cat) => (
+              <CategoryPill
+                key={cat.label}
+                label={cat.label}
+                emoji={cat.emoji}
+                bgColor={cat.bg}
+                textColor={cat.text}
+                selected={selectedCategory === cat.label}
+                onPress={() => setSelectedCategory(
+                  selectedCategory === cat.label ? null : cat.label
+                )}
+              />
+            ))}
+          </ScrollView>
 
-        {/* White card */}
-        <View style={styles.card}>
-          {/* Plan name (required) */}
-          <FormSection label="What's the move?" tag="Required">
-            <StyledInput
-              placeholder="Game night, brunch, etc."
+          {/* Title input */}
+          <View className="relative">
+            <FilledInput
+              placeholder="name your vibe..."
               value={title}
               onChangeText={setTitle}
+              style={{ fontFamily: "BeVietnamPro_500Medium", fontSize: 16 }}
             />
-          </FormSection>
+            <View
+              className="absolute -right-1 -top-2 bg-secondary-container px-2 py-1 rounded-chip"
+              style={{ transform: [{ rotate: "1.2deg" }] }}
+            >
+              <Text className="font-heading text-[10px] text-on-secondary-container uppercase">
+                required!
+              </Text>
+            </View>
+          </View>
+        </View>
 
-          {/* Location (optional) */}
-          <FormSection label="Addy?" tag="Optional" icon="location-outline">
-            <StyledInput
-              placeholder="Where are we meeting?"
+        {/* Section: Where & When */}
+        <View className="gap-6">
+          <View className="gap-3">
+            <Text className="font-heading text-xl text-primary px-1">
+              where at?
+            </Text>
+            <FilledInput
+              placeholder="pick a spot"
               value={location}
               onChangeText={setLocation}
+              icon="location-outline"
             />
-          </FormSection>
+          </View>
 
-          {/* Date (optional) */}
-          <FormSection label="When?" tag="Optional" icon="calendar-outline">
-            <StyledInput
+          <View className="gap-3">
+            <Text className="font-heading text-xl text-primary px-1">
+              when?
+            </Text>
+            <FilledInput
               placeholder="MM/DD/YYYY"
               value={dateText}
               onChangeText={setDateText}
+              icon="calendar-outline"
               keyboardType="numbers-and-punctuation"
             />
-          </FormSection>
+            <FilledInput
+              placeholder="7:00 PM"
+              value={timeText}
+              onChangeText={setTimeText}
+              icon="time-outline"
+            />
+            <Text className="font-label text-[10px] text-tertiary uppercase tracking-widest px-1">
+              heads up: no flaking allowed!
+            </Text>
+          </View>
+        </View>
 
-          {/* Details (optional) */}
-          <FormSection label="Details" tag="Optional">
-            <TextInput
-              placeholder="Add any extra info..."
-              placeholderTextColor={Colors.textTertiary}
+        {/* Section: Dress code */}
+        <View className="gap-4">
+          <Text className="font-heading text-2xl text-primary tracking-tight">
+            what's the fit?
+          </Text>
+          <View className="flex-row flex-wrap gap-3">
+            {DRESS_CODES.map((dc) => (
+              <JellybeanChip
+                key={dc.label}
+                label={dc.label}
+                emoji={dc.emoji}
+                variant="primary"
+                selected={selectedDressCode === dc.label}
+                onPress={() => setSelectedDressCode(
+                  selectedDressCode === dc.label ? null : dc.label
+                )}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* Section: Details */}
+        <View className="gap-3">
+          <Text className="font-heading text-xl text-primary px-1">
+            any deets?
+          </Text>
+          <SketchCard tilt={1.2} variant="default" className="gap-3">
+            <FilledInput
+              placeholder="mention the dress code, the menu, or just hyped thoughts..."
               value={description}
               onChangeText={setDescription}
               multiline
               numberOfLines={4}
-              style={[styles.input, styles.multilineInput]}
-              textAlignVertical="top"
+              style={{ textAlignVertical: "top", minHeight: 80, fontStyle: "italic" }}
             />
-          </FormSection>
+            <View className="flex-row justify-between items-center pt-2 border-t border-outline-variant/10">
+              <Pressable className="flex-row items-center gap-2">
+                <View className="w-7 h-7 rounded-full bg-primary-container items-center justify-center">
+                  <Ionicons name="add" size={14} color="#3F6377" />
+                </View>
+                <Text className="font-body-medium text-xs text-on-surface-variant">
+                  add images or links
+                </Text>
+              </Pressable>
+              <Text className="font-label text-[10px] text-on-surface-variant/50 uppercase tracking-widest">
+                {description.length} / 240
+              </Text>
+            </View>
+          </SketchCard>
+        </View>
 
-          {/* Submit button */}
-          <Pressable
+        {/* CTA area */}
+        <View className="items-center gap-4 pt-4">
+          <View className="items-center">
+            <Text className="font-heading text-xl text-primary">
+              let's make it happen!
+            </Text>
+            <Text className="font-body text-sm text-on-surface-variant">
+              this will be posted to your squad feed.
+            </Text>
+          </View>
+          <BouncyButton
+            title="Post to Squad"
+            icon="send-outline"
             onPress={handleSubmit}
             disabled={!canSubmit || isSubmitting}
-            style={[
-              styles.submitButton,
-              { opacity: canSubmit ? 1 : 0.5 },
-            ]}
-          >
-            {isSubmitting ? (
-              <View style={styles.submitRow}>
-                <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.submitText}>Creating…</Text>
-              </View>
-            ) : (
-              <Text style={styles.submitText}>Who's Down?</Text>
-            )}
-          </Pressable>
+            loading={isSubmitting}
+          />
         </View>
       </ScrollView>
-    </LinearGradient>
-  );
-}
-
-// ─── Helper components ──────────────────────────────────
-
-function FormSection({
-  label,
-  tag,
-  icon,
-  children,
-}: {
-  label: string;
-  tag?: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-  children: React.ReactNode;
-}) {
-  return (
-    <View style={sectionStyles.container}>
-      <View style={sectionStyles.labelRow}>
-        {icon && (
-          <Ionicons name={icon} size={11} color={Colors.textSecondary} />
-        )}
-        <Text style={sectionStyles.label}>{label.toUpperCase()}</Text>
-        {tag && <Text style={sectionStyles.tag}>({tag})</Text>}
-      </View>
-      {children}
     </View>
   );
 }
-
-function StyledInput({
-  placeholder,
-  value,
-  onChangeText,
-  keyboardType,
-}: {
-  placeholder: string;
-  value: string;
-  onChangeText: (t: string) => void;
-  keyboardType?: 'default' | 'numbers-and-punctuation';
-}) {
-  return (
-    <TextInput
-      placeholder={placeholder}
-      placeholderTextColor={Colors.textTertiary}
-      value={value}
-      onChangeText={onChangeText}
-      keyboardType={keyboardType}
-      style={styles.input}
-    />
-  );
-}
-
-// ─── Styles ─────────────────────────────────────────────
-
-const sectionStyles = StyleSheet.create({
-  container: {
-    gap: Spacing.sm,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    letterSpacing: 0.5,
-  },
-  tag: {
-    fontSize: 11,
-    fontWeight: '400',
-    color: Colors.textTertiary,
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.xl,
-  },
-  backButton: {
-    marginLeft: Spacing.md,
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pageTitle: {
-    ...Typography.title1,
-    color: Colors.textOnBlue,
-    textAlign: 'center',
-    paddingHorizontal: Spacing.md,
-  },
-  card: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: Radius.xxl,
-    padding: Spacing.lg,
-    marginHorizontal: Spacing.md,
-    gap: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  input: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.inputBackground,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-  },
-  multilineInput: {
-    minHeight: 80,
-  },
-  submitButton: {
-    backgroundColor: 'rgb(97, 112, 140)',
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Spacing.sm,
-  },
-  submitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  submitText: {
-    ...Typography.headline,
-    color: '#FFFFFF',
-  },
-});

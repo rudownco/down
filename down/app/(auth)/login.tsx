@@ -1,23 +1,18 @@
-// Login screen with animated logo
-// Using React Native's built-in Animated API (Expo Go compatible)
+// Login screen — "The Social Sketchbook" aesthetic
+// Animated logo on light surface background
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   View,
   Text,
   Pressable,
-  StyleSheet,
   useWindowDimensions,
   ActivityIndicator,
   Animated,
   Easing,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Colors } from '../../src/theme/colors';
-import { Spacing, Radius, IconSize } from '../../src/theme/spacing';
-import { Typography } from '../../src/theme/typography';
-import { useAuthStore } from '../../src/stores/authStore';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../src/stores/authStore";
 
 export default function LoginScreen() {
   const { width } = useWindowDimensions();
@@ -55,7 +50,7 @@ export default function LoginScreen() {
           Animated.timing(downRotation, { toValue: 3, duration: 60, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
           Animated.timing(downRotation, { toValue: -3, duration: 60, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ]),
-        Animated.timing(downRotation, { toValue: 0, duration: 100, useNativeDriver: true }),
+        Animated.timing(downRotation, { toValue: -3, duration: 100, useNativeDriver: true }),
       ]).start();
     }, 850);
 
@@ -65,7 +60,7 @@ export default function LoginScreen() {
       Animated.spring(emojiOpacity, { toValue: 1, damping: 9, stiffness: 120, useNativeDriver: true, delay: 1100 }),
     ]).start();
 
-    // Emoji levitates forever
+    // Emoji levitates
     setTimeout(() => {
       Animated.loop(
         Animated.sequence([
@@ -89,24 +84,24 @@ export default function LoginScreen() {
 
   const downRotateStr = downRotation.interpolate({
     inputRange: [-3, 0, 3],
-    outputRange: ['-3deg', '0deg', '3deg'],
+    outputRange: ["-3deg", "0deg", "3deg"],
   });
 
-  const fontSize = width * 0.18;
-  const fontSizeLg = width * 0.26;
-  const emojiSize = width * 0.22;
+  const fontSize = width * 0.16;
+  const fontSizeLg = width * 0.22;
+  const emojiSize = width * 0.18;
 
   return (
-    <LinearGradient
-      colors={[Colors.appBackgroundDeep, Colors.appBackground]}
-      style={styles.container}
-    >
-      {/* Logo */}
-      <View style={styles.logoArea}>
+    <View className="flex-1 bg-surface items-center justify-center">
+      {/* Logo area */}
+      <View className="items-center flex-[0.5] justify-center">
         <Animated.Text
           style={[
-            styles.ruText,
-            { fontSize },
+            {
+              fontSize,
+              fontFamily: "PlusJakartaSans_700Bold",
+              color: "#374955",
+            },
             { transform: [{ translateY: ruOffset }], opacity: ruOpacity },
           ]}
         >
@@ -114,8 +109,12 @@ export default function LoginScreen() {
         </Animated.Text>
         <Animated.Text
           style={[
-            styles.downText,
-            { fontSize: fontSizeLg },
+            {
+              fontSize: fontSizeLg,
+              fontFamily: "PlusJakartaSans_800ExtraBold",
+              color: "#3F6377",
+              letterSpacing: -2,
+            },
             {
               transform: [{ translateY: downOffset }, { rotate: downRotateStr }],
               opacity: downOpacity,
@@ -126,7 +125,7 @@ export default function LoginScreen() {
         </Animated.Text>
         <Animated.Text
           style={[
-            { fontSize: emojiSize, marginTop: Spacing.xs },
+            { fontSize: emojiSize, marginTop: 8 },
             {
               transform: [
                 { translateY: Animated.add(emojiOffset, emojiTranslateY) },
@@ -139,120 +138,81 @@ export default function LoginScreen() {
         </Animated.Text>
       </View>
 
-      <View style={{ height: Spacing.xxxl }} />
+      {/* Tagline */}
+      <Text className="font-body text-tertiary italic text-base mb-8">
+        time to assemble the dream team.
+      </Text>
 
       {/* Auth buttons */}
       <Animated.View
-        style={[
-          styles.buttonsContainer,
-          {
-            opacity: contentOpacity,
-            transform: [{ translateY: contentOffset }],
-          },
-        ]}
+        style={{
+          opacity: contentOpacity,
+          transform: [{ translateY: contentOffset }],
+          width: "100%",
+          paddingHorizontal: 24,
+          gap: 12,
+        }}
       >
-        <Pressable style={styles.authButton} onPress={() => signInMock()}>
-          <Ionicons name="logo-apple" size={IconSize.md} color={Colors.textPrimary} />
-          <Text style={styles.authButtonText}>Continue with Apple</Text>
+        <Pressable
+          onPress={() => signInMock()}
+          className="flex-row items-center justify-center gap-3 bg-surface-container-lowest py-4 px-6 rounded-button border border-outline-variant/30"
+          style={{
+            shadowColor: "#131D23",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 16,
+            elevation: 3,
+          }}
+        >
+          <Ionicons name="logo-apple" size={22} color="#131D23" />
+          <Text className="font-heading text-on-surface text-base">
+            Continue with Apple
+          </Text>
         </Pressable>
 
-        <Pressable style={styles.authButton} onPress={() => signInMock()}>
-          <Text style={{ fontSize: IconSize.md, fontWeight: '700' }}>G</Text>
-          <Text style={styles.authButtonText}>Continue with Google</Text>
+        <Pressable
+          onPress={() => signInMock()}
+          className="flex-row items-center justify-center gap-3 bg-surface-container-lowest py-4 px-6 rounded-button border border-outline-variant/30"
+          style={{
+            shadowColor: "#131D23",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 16,
+            elevation: 3,
+          }}
+        >
+          <Text className="font-heading text-on-surface text-lg">G</Text>
+          <Text className="font-heading text-on-surface text-base">
+            Continue with Google
+          </Text>
         </Pressable>
       </Animated.View>
 
-      <View style={{ height: Spacing.lg }} />
-
       {/* Terms */}
       <Animated.Text
-        style={[
-          styles.terms,
-          {
-            opacity: contentOpacity,
-            transform: [{ translateY: contentOffset }],
-          },
-        ]}
+        style={{
+          opacity: contentOpacity,
+          transform: [{ translateY: contentOffset }],
+          marginTop: 20,
+        }}
+        className="font-body text-xs text-outline text-center px-10"
       >
         By continuing you agree to our Terms & Privacy Policy
       </Animated.Text>
 
-      <View style={{ flex: 0.3 }} />
+      <View style={{ flex: 0.2 }} />
 
       {/* Loading overlay */}
       {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <View style={styles.loadingCard}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.loadingText}>Signing you in…</Text>
+        <View className="absolute inset-0 bg-scrim/30 items-center justify-center">
+          <View className="bg-surface-container-lowest/90 rounded-card p-8 items-center gap-4">
+            <ActivityIndicator size="large" color="#3F6377" />
+            <Text className="font-heading text-primary text-base">
+              Signing you in…
+            </Text>
           </View>
         </View>
       )}
-    </LinearGradient>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoArea: {
-    alignItems: 'center',
-    flex: 0.5,
-    justifyContent: 'center',
-  },
-  ruText: {
-    fontWeight: '700',
-    color: Colors.textOnBlueMuted,
-  },
-  downText: {
-    fontWeight: '900',
-    color: Colors.textOnBlue,
-  },
-  buttonsContainer: {
-    width: '100%',
-    paddingHorizontal: Spacing.md,
-    gap: Spacing.sm,
-  },
-  authButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing.sm + 2,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  authButtonText: {
-    ...Typography.headline,
-    color: Colors.textPrimary,
-  },
-  terms: {
-    ...Typography.caption,
-    color: Colors.textOnBlueFaint,
-    textAlign: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingCard: {
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    borderRadius: Radius.xl,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  loadingText: {
-    ...Typography.subhead,
-    color: Colors.textOnBlue,
-  },
-});

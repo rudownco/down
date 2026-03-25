@@ -1,45 +1,37 @@
-// Voting screen
-// Translated from ios/down/Screens/VotingView.swift
+// Voting screen — Social Sketchbook aesthetic
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../../src/theme/colors';
-import { Spacing, Radius } from '../../../../src/theme/spacing';
-import { Typography } from '../../../../src/theme/typography';
-import { NavHeader } from '../../../../src/components/NavHeader';
-import { OverlayCard } from '../../../../src/components/Card';
-import { VoteListItem } from '../../../../src/components/VoteList';
-import { AppButton } from '../../../../src/components/Button';
-import { useAuthStore } from '../../../../src/stores/authStore';
-import { useEventStore } from '../../../../src/stores/eventStore';
-import { getEventEmoji } from '../../../../src/utils/emoji';
-import { getTotalVoters } from '../../../../src/utils/event';
-import * as api from '../../../../src/services/api';
+import React, { useState } from "react";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SketchCard } from "../../../../components/SketchCard";
+import { BouncyButton } from "../../../../components/BouncyButton";
+import { AvatarStack } from "../../../../components/AvatarStack";
+import { useAuthStore } from "../../../../src/stores/authStore";
+import { useEventStore } from "../../../../src/stores/eventStore";
+import * as api from "../../../../src/services/api";
+import { cn } from "../../../../lib/utils";
 
-export default function VotingScreen() {
+export default function VoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { events, updateEvent } = useEventStore();
-
+  const { events } = useEventStore();
   const event = events.find((e) => e.id === id);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!event || !user) return null;
+  if (!event) {
+    return (
+      <View className="flex-1 bg-surface items-center justify-center">
+        <Text className="font-body text-on-surface-variant">Event not found</Text>
+      </View>
+    );
+  }
 
-  const emoji = getEventEmoji(event.title);
-  const totalVoters = Math.max(1, getTotalVoters(event));
-  const leadingId = event.votingOptions.reduce(
-    (max, opt) => (opt.votes > (event.votingOptions.find((o) => o.id === max)?.votes ?? 0) ? opt.id : max),
-    event.votingOptions[0]?.id ?? ''
-  );
-
-  const toggle = (optionId: string) => {
-    setSelectedIds((prev) => {
+  const toggleOption = (optionId: string) => {
+    setSelectedOptionIds((prev) => {
       const next = new Set(prev);
       if (next.has(optionId)) next.delete(optionId);
       else next.add(optionId);
@@ -47,152 +39,107 @@ export default function VotingScreen() {
     });
   };
 
-  const canSubmit = selectedIds.size > 0;
-
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!user || selectedOptionIds.size === 0) return;
     setIsSubmitting(true);
     try {
-      const updated = await api.submitVotes(
-        event.id,
-        Array.from(selectedIds),
-        user.id
-      );
-      updateEvent(updated);
-      Alert.alert(
-        'Votes submitted! 🎉',
-        `You voted for ${selectedIds.size} time${selectedIds.size === 1 ? '' : 's'}.`,
-        [{ text: 'Back to group', onPress: () => router.back() }]
-      );
-    } catch {
+      await api.submitVotes(event.id, user.id, Array.from(selectedOptionIds));
+      router.back();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
       setIsSubmitting(false);
     }
   };
 
   return (
-    <LinearGradient
-      colors={[Colors.appBackgroundDeep, Colors.appBackground]}
-      style={styles.container}
-    >
-      <NavHeader title="Vote" onBack={() => router.back()} />
+    <View className="flex-1 bg-surface">
+      {/* Header */}
+      <View className="pt-14 px-6 pb-4 flex-row items-center gap-4">
+        <Pressable onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#3F6377" />
+        </Pressable>
+        <Text className="font-heading text-lg text-on-surface flex-1">
+          Vote
+        </Text>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ padding: 24, paddingBottom: 120, gap: 24 }}
       >
-        {/* Event info card */}
-        <OverlayCard>
-          <View style={styles.eventInfo}>
-            <Text style={{ fontSize: 36 }}>{emoji}</Text>
-            <View style={styles.eventInfoText}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              {event.description && (
-                <Text style={styles.eventDesc} numberOfLines={2}>
-                  {event.description}
-                </Text>
-              )}
-              <View style={styles.metaRow}>
-                {event.location && (
-                  <View style={styles.metaItem}>
-                    <Ionicons name="location-outline" size={13} color={Colors.textOnBlueFaint} />
-                    <Text style={styles.metaText}>{event.location}</Text>
-                  </View>
-                )}
-                <View style={styles.metaItem}>
-                  <Ionicons name="people-outline" size={13} color={Colors.textOnBlueFaint} />
-                  <Text style={styles.metaText}>{getTotalVoters(event)} voters</Text>
-                </View>
-              </View>
+        {/* Event info */}
+        <SketchCard tilt={-1} variant="accent" className="gap-3">
+          <Text className="font-heading-extrabold text-2xl text-on-tertiary-container">
+            {event.title}
+          </Text>
+          {event.description && (
+            <Text className="font-body text-on-tertiary-container/80 text-base leading-relaxed">
+              {event.description}
+            </Text>
+          )}
+          <View className="flex-row items-center gap-3 mt-2">
+            <View className="bg-surface-container-lowest/20 px-3 py-1 rounded-chip">
+              <Text className="font-heading text-xs text-on-tertiary-container">
+                {event.votingOptions?.length ?? 0} OPTIONS
+              </Text>
             </View>
           </View>
-        </OverlayCard>
+        </SketchCard>
 
         {/* Voting options */}
-        <View style={styles.votingSection}>
-          <Text style={styles.sectionTitle}>📅 Pick your times</Text>
-          <Text style={styles.sectionSubtitle}>Select all times that work for you</Text>
-
-          <View style={{ gap: Spacing.sm, marginTop: Spacing.md }}>
-            {event.votingOptions.map((option) => (
-              <VoteListItem
-                key={option.id}
-                option={option}
-                totalVoters={totalVoters}
-                isSelected={selectedIds.has(option.id)}
-                isLeading={option.id === leadingId && !selectedIds.has(option.id)}
-                onTap={() => toggle(option.id)}
-              />
-            ))}
-          </View>
-        </View>
-
-        {/* Submit button */}
-        <View style={{ paddingHorizontal: Spacing.md }}>
-          <AppButton
-            title={
-              isSubmitting
-                ? 'Submitting…'
-                : selectedIds.size === 0
-                ? 'Select at least one time'
-                : `🗳️  Submit ${selectedIds.size} Vote${selectedIds.size === 1 ? '' : 's'}`
-            }
-            onPress={handleSubmit}
-            variant="primary"
-            disabled={!canSubmit || isSubmitting}
-            loading={isSubmitting}
-          />
+        <View className="gap-4">
+          <Text className="font-heading text-xl text-primary">
+            pick your times
+          </Text>
+          {event.votingOptions?.map((option) => {
+            const isSelected = selectedOptionIds.has(option.id);
+            return (
+              <Pressable key={option.id} onPress={() => toggleOption(option.id)}>
+                <SketchCard
+                  tilt={0}
+                  variant={isSelected ? "nested" : "default"}
+                  className={cn(
+                    "flex-row items-center justify-between gap-3",
+                    isSelected && "border-2 border-primary/30"
+                  )}
+                >
+                  <View className="flex-1 gap-1">
+                    <Text className="font-heading text-base text-on-surface">
+                      {option.date}
+                    </Text>
+                    <Text className="font-body text-sm text-on-surface-variant">
+                      {option.time}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-3">
+                    {option.voters && option.voters.length > 0 && (
+                      <AvatarStack users={option.voters} maxVisible={2} size="xs" />
+                    )}
+                    <View className="bg-primary-container px-3 py-1 rounded-chip">
+                      <Text className="font-heading text-xs text-primary">
+                        {option.votes}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={24} color="#3F6377" />
+                    )}
+                  </View>
+                </SketchCard>
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
-    </LinearGradient>
+
+      {/* Submit */}
+      <View className="absolute bottom-0 left-0 right-0 p-6 bg-surface/90">
+        <BouncyButton
+          title={`Cast Vote (${selectedOptionIds.size})`}
+          onPress={handleSubmit}
+          disabled={selectedOptionIds.size === 0 || isSubmitting}
+          loading={isSubmitting}
+        />
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: {
-    padding: Spacing.md,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.lg,
-  },
-  eventInfo: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.sm,
-  },
-  eventInfoText: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  eventTitle: {
-    ...Typography.title3,
-    color: Colors.textOnBlue,
-  },
-  eventDesc: {
-    ...Typography.callout,
-    color: Colors.textOnBlueMuted,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metaText: {
-    ...Typography.caption,
-    color: Colors.textOnBlueFaint,
-  },
-  votingSection: {
-    gap: 4,
-  },
-  sectionTitle: {
-    ...Typography.headline,
-    color: Colors.textOnBlue,
-  },
-  sectionSubtitle: {
-    ...Typography.footnote,
-    color: Colors.textOnBlueMuted,
-  },
-});

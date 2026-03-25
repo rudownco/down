@@ -1,314 +1,164 @@
-// RSVP screen
-// Translated from ios/down/Screens/RSVPView.swift
+// RSVP screen — Social Sketchbook aesthetic
 
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../../src/theme/colors';
-import { Spacing, Radius, IconSize, AvatarSize } from '../../../../src/theme/spacing';
-import { Typography } from '../../../../src/theme/typography';
-import { NavHeader } from '../../../../src/components/NavHeader';
-import { Card } from '../../../../src/components/Card';
-import { RSVPSelector } from '../../../../src/components/RSVPSelector';
-import { EventStatusBadge } from '../../../../src/components/EventStatusBadge';
-import { AppButton } from '../../../../src/components/Button';
-import { useAuthStore } from '../../../../src/stores/authStore';
-import { useEventStore } from '../../../../src/stores/eventStore';
-import { useGroupStore } from '../../../../src/stores/groupStore';
-import { getEventEmoji } from '../../../../src/utils/emoji';
-import { getRsvpUsers } from '../../../../src/utils/event';
-import { getAvatarColor } from '../../../../src/utils/user';
-import { RSVPStatus, RSVPStatusMeta } from '../../../../src/types';
-import * as api from '../../../../src/services/api';
+import React, { useState } from "react";
+import { View, Text, ScrollView, Pressable, Alert } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SketchCard } from "../../../../components/SketchCard";
+import { RSVPButtonRow } from "../../../../components/RSVPButtonRow";
+import { BouncyButton } from "../../../../components/BouncyButton";
+import { AvatarCircle } from "../../../../components/AvatarCircle";
+import { SectionLabel } from "../../../../components/SectionLabel";
+import { useAuthStore } from "../../../../src/stores/authStore";
+import { useEventStore } from "../../../../src/stores/eventStore";
+import * as api from "../../../../src/services/api";
+import type { RSVPStatus } from "../../../../src/types";
 
 export default function RSVPScreen() {
-  const { id, groupId } = useLocalSearchParams<{ id: string; groupId: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthStore();
-  const { events, updateEvent } = useEventStore();
-  const { groups } = useGroupStore();
-
+  const { events } = useEventStore();
   const event = events.find((e) => e.id === id);
-  const group = groups.find((g) => g.id === groupId);
-  const groupMembers = group?.members ?? [];
 
-  // Pre-select existing RSVP
-  const existingStatus = event?.rsvps.find((r) => r.userId === user?.id)?.status ?? null;
-  const [selectedStatus, setSelectedStatus] = useState<RSVPStatus | null>(existingStatus);
+  const [selectedStatus, setSelectedStatus] = useState<RSVPStatus | undefined>(
+    event?.rsvps?.find((r) => r.userId === user?.id)?.status
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!event || !user) return null;
+  if (!event) {
+    return (
+      <View className="flex-1 bg-surface items-center justify-center">
+        <Text className="font-body text-on-surface-variant">Event not found</Text>
+      </View>
+    );
+  }
 
-  const emoji = getEventEmoji(event.title);
-  const canSubmit = selectedStatus !== null;
+  const goingRSVPs = event.rsvps?.filter((r) => r.status === "going") ?? [];
+  const maybeRSVPs = event.rsvps?.filter((r) => r.status === "maybe") ?? [];
+  const notGoingRSVPs = event.rsvps?.filter((r) => r.status === "not_going") ?? [];
 
-  const handleConfirm = async () => {
-    if (!selectedStatus) return;
+  const handleSubmit = async () => {
+    if (!user || !selectedStatus) return;
     setIsSubmitting(true);
     try {
-      const rsvp = await api.submitRSVP(event.id, selectedStatus, user.id);
-
-      // Update local event
-      const updatedEvent = { ...event };
-      const idx = updatedEvent.rsvps.findIndex((r) => r.userId === user.id);
-      if (idx >= 0) {
-        updatedEvent.rsvps = [...updatedEvent.rsvps];
-        updatedEvent.rsvps[idx] = rsvp;
-      } else {
-        updatedEvent.rsvps = [...updatedEvent.rsvps, rsvp];
-      }
-      updateEvent(updatedEvent);
-
-      const meta = RSVPStatusMeta[selectedStatus];
-      Alert.alert("You're in! 🎉", `RSVP saved: ${meta.emoji} ${meta.label}`, [
-        { text: 'Sweet!', onPress: () => router.back() },
-      ]);
-    } catch {
+      await api.submitRSVP(event.id, user.id, selectedStatus);
+      router.back();
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
       setIsSubmitting(false);
     }
   };
 
-  // Get users for each status
-  const goingUsers = getRsvpUsers(event, 'going', groupMembers);
-  const maybeUsers = getRsvpUsers(event, 'maybe', groupMembers);
-  const notGoingUsers = getRsvpUsers(event, 'not_going', groupMembers);
-  const hasAttendees = goingUsers.length + maybeUsers.length + notGoingUsers.length > 0;
-
-  const getButtonLabel = () => {
-    if (isSubmitting) return 'Saving…';
-    if (!selectedStatus) return 'Select your RSVP above';
-    const meta = RSVPStatusMeta[selectedStatus];
-    if (meta.label === "Can't") return "😢  Can't make it";
-    return `${meta.emoji}  I'm ${meta.label}!`;
-  };
-
   return (
-    <LinearGradient
-      colors={[Colors.appBackgroundDeep, Colors.appBackground]}
-      style={styles.container}
-    >
-      <NavHeader title="RSVP" onBack={() => router.back()} />
+    <View className="flex-1 bg-surface">
+      {/* Header */}
+      <View className="pt-14 px-6 pb-4 flex-row items-center gap-4">
+        <Pressable onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#3F6377" />
+        </Pressable>
+        <Text className="font-heading text-lg text-on-surface flex-1">
+          RSVP
+        </Text>
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ padding: 24, paddingBottom: 120, gap: 24 }}
       >
-        {/* Event hero card */}
-        <Card padding={Spacing.md} cornerRadius={Radius.xxl}>
-          <View style={styles.heroHeader}>
-            <View style={{ gap: Spacing.xs }}>
-              <Text style={{ fontSize: 40 }}>{emoji}</Text>
-              <Text style={styles.heroTitle}>{event.title}</Text>
+        {/* Event hero */}
+        <SketchCard tilt={-0.8} className="gap-3">
+          <Text className="font-heading-extrabold text-2xl text-on-surface">
+            {event.title}
+          </Text>
+          {event.date && (
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="calendar-outline" size={16} color="#76574E" />
+              <Text className="font-body text-sm text-tertiary">
+                {event.date}{event.time ? ` at ${event.time}` : ""}
+              </Text>
             </View>
-            <EventStatusBadge status={event.status} />
-          </View>
-
+          )}
+          {event.location && (
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="location-outline" size={16} color="#76574E" />
+              <Text className="font-body text-sm text-tertiary">
+                {event.location}
+              </Text>
+            </View>
+          )}
           {event.description && (
-            <Text style={styles.heroDesc} numberOfLines={3}>
+            <Text className="font-body text-sm text-on-surface-variant mt-1">
               {event.description}
             </Text>
           )}
-
-          <View style={styles.divider} />
-
-          {/* Detail grid */}
-          <View style={styles.detailGrid}>
-            {event.date && (
-              <DetailCell icon="calendar-outline" value={event.date} />
-            )}
-            {event.time && (
-              <DetailCell icon="time-outline" value={event.time} />
-            )}
-            {event.location && (
-              <DetailCell icon="location-outline" value={event.location} />
-            )}
-            <DetailCell
-              icon="people-outline"
-              value={`${event.attendees.length} attending`}
-            />
-          </View>
-        </Card>
+        </SketchCard>
 
         {/* RSVP selector */}
-        <View style={{ gap: Spacing.md }}>
-          <Text style={styles.rsvpTitle}>Are you down? 👇</Text>
-          <RSVPSelector
+        <View className="gap-3">
+          <Text className="font-heading text-xl text-primary">
+            are you down?
+          </Text>
+          <RSVPButtonRow
             selectedStatus={selectedStatus}
             onSelect={setSelectedStatus}
           />
+          <Text className="font-body-medium text-xs text-outline italic text-center mt-1">
+            Don't flake 👀
+          </Text>
         </View>
 
-        {/* Attendees section */}
-        {hasAttendees && (
-          <View style={{ gap: Spacing.sm }}>
-            <Text style={styles.whoLabel}>Who's who</Text>
-            <Card padding={Spacing.sm} cornerRadius={Radius.xl}>
-              {goingUsers.length > 0 && (
-                <AttendeeRow status="going" users={goingUsers} />
-              )}
-              {maybeUsers.length > 0 && (
-                <AttendeeRow status="maybe" users={maybeUsers} />
-              )}
-              {notGoingUsers.length > 0 && (
-                <AttendeeRow status="not_going" users={notGoingUsers} />
-              )}
-            </Card>
+        {/* Attendee lists */}
+        {goingRSVPs.length > 0 && (
+          <View className="gap-3">
+            <SectionLabel text={`going (${goingRSVPs.length})`} />
+            <View className="flex-row flex-wrap gap-3">
+              {goingRSVPs.map((r) => {
+                const attendee = event.attendees?.find((a) => a.id === r.userId);
+                if (!attendee) return null;
+                return (
+                  <View key={r.id} className="items-center gap-1">
+                    <AvatarCircle user={attendee} size="md" tilt={1} />
+                    <Text className="font-body text-xs text-on-surface">
+                      {attendee.name.split(" ")[0]}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
           </View>
         )}
 
-        {/* Confirm button */}
-        <View style={{ paddingHorizontal: Spacing.md }}>
-          <AppButton
-            title={getButtonLabel()}
-            onPress={handleConfirm}
-            variant="primary"
-            disabled={!canSubmit || isSubmitting}
-            loading={isSubmitting}
-          />
-        </View>
-      </ScrollView>
-    </LinearGradient>
-  );
-}
-
-// ─── Helper components ──────────────────────────────────
-
-function DetailCell({
-  icon,
-  value,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  value: string;
-}) {
-  return (
-    <View style={detailStyles.cell}>
-      <Ionicons name={icon} size={IconSize.sm} color={Colors.accentBlue} />
-      <Text style={detailStyles.value} numberOfLines={2}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function AttendeeRow({
-  status,
-  users,
-}: {
-  status: RSVPStatus;
-  users: { id: string; name: string }[];
-}) {
-  const meta = RSVPStatusMeta[status];
-  return (
-    <View style={attendeeStyles.row}>
-      <Text style={attendeeStyles.emoji}>{meta.emoji}</Text>
-      <Text style={attendeeStyles.label}>{meta.label}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={attendeeStyles.chips}>
-          {users.map((u) => (
-            <View
-              key={u.id}
-              style={[
-                attendeeStyles.chip,
-                { backgroundColor: getAvatarColor(u.name) },
-              ]}
-            >
-              <Text style={attendeeStyles.chipText}>
-                {u.name.split(' ')[0]}
-              </Text>
+        {maybeRSVPs.length > 0 && (
+          <View className="gap-3">
+            <SectionLabel text={`maybe (${maybeRSVPs.length})`} />
+            <View className="flex-row flex-wrap gap-3">
+              {maybeRSVPs.map((r) => {
+                const attendee = event.attendees?.find((a) => a.id === r.userId);
+                if (!attendee) return null;
+                return (
+                  <View key={r.id} className="items-center gap-1">
+                    <AvatarCircle user={attendee} size="md" tilt={-1} />
+                    <Text className="font-body text-xs text-on-surface-variant">
+                      {attendee.name.split(" ")[0]}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
-          ))}
-        </View>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Submit */}
+      <View className="absolute bottom-0 left-0 right-0 p-6 bg-surface/90">
+        <BouncyButton
+          title="Confirm RSVP"
+          onPress={handleSubmit}
+          disabled={!selectedStatus || isSubmitting}
+          loading={isSubmitting}
+        />
+      </View>
     </View>
   );
 }
-
-// ─── Styles ─────────────────────────────────────────────
-
-const detailStyles = StyleSheet.create({
-  cell: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    padding: Spacing.sm,
-    backgroundColor: Colors.cardBackgroundSecondary,
-    borderRadius: Radius.md,
-    width: '48%',
-  },
-  value: {
-    ...Typography.footnote,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-});
-
-const attendeeStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  emoji: { fontSize: 18, width: 28, textAlign: 'center' },
-  label: {
-    ...Typography.subhead,
-    color: Colors.textSecondary,
-    width: 56,
-  },
-  chips: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  chip: {
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  chipText: {
-    ...Typography.caption,
-    color: '#FFFFFF',
-  },
-});
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  scrollContent: {
-    padding: Spacing.md,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.lg,
-  },
-  heroHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  heroTitle: {
-    ...Typography.title2,
-    color: Colors.textPrimary,
-  },
-  heroDesc: {
-    ...Typography.callout,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.divider,
-    marginVertical: Spacing.md,
-  },
-  detailGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  rsvpTitle: {
-    ...Typography.title3,
-    color: Colors.textOnBlue,
-  },
-  whoLabel: {
-    ...Typography.subhead,
-    color: Colors.textOnBlueMuted,
-  },
-});

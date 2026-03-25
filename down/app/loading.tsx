@@ -1,20 +1,13 @@
 // Splash/loading screen while restoring session
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { Colors } from '../src/theme/colors';
+import { View, ActivityIndicator, Text } from "react-native";
 
 export default function LoadingScreen() {
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#FFFFFF" />
+    <View className="flex-1 bg-surface items-center justify-center gap-4">
+      <Text className="font-heading-extrabold text-4xl text-primary italic tracking-tighter -rotate-3">
+        down
+      </Text>
+      <ActivityIndicator size="large" color="#3F6377" />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.appBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

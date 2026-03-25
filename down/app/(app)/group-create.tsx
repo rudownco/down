@@ -1,31 +1,34 @@
-// Create Group screen (presented as modal)
-// Translated from ios/down/Screens/CreateGroupView.swift
+// Create Squad screen — matching Stitch export1
+// "The Social Sketchbook" aesthetic
 
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../src/theme/colors';
-import { Spacing, Radius } from '../../src/theme/spacing';
-import { Typography } from '../../src/theme/typography';
-import { NavHeader } from '../../src/components/NavHeader';
-import { AppButton } from '../../src/components/Button';
-import * as api from '../../src/services/api';
-import { useGroupStore } from '../../src/stores/groupStore';
+import React, { useState } from "react";
+import { View, Text, ScrollView, Alert, Pressable } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SketchCard } from "../../components/SketchCard";
+import { FilledInput } from "../../components/FilledInput";
+import { JellybeanChip } from "../../components/JellybeanChip";
+import { FriendSelectionGrid } from "../../components/FriendSelectionGrid";
+import { BouncyButton } from "../../components/BouncyButton";
+import { SectionLabel } from "../../components/SectionLabel";
+import * as api from "../../src/services/api";
+import { useGroupStore } from "../../src/stores/groupStore";
+import { allUsers } from "../../src/mocks/data";
+
+const SUGGESTIONS = [
+  "The Supper Club",
+  "Brunch Queens",
+  "Game Night Crew",
+  "Padel Bros",
+  "Weekend Warriors",
+];
 
 export default function CreateGroupScreen() {
   const router = useRouter();
   const { addGroup } = useGroupStore();
-  const [groupName, setGroupName] = useState('');
+  const [groupName, setGroupName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
 
   const canCreate = groupName.trim().length > 0;
 
@@ -37,122 +40,136 @@ export default function CreateGroupScreen() {
       addGroup(newGroup);
       router.back();
     } catch (e: any) {
-      Alert.alert('Something went wrong', e.message);
+      Alert.alert("Something went wrong", e.message);
       setIsCreating(false);
     }
   };
 
+  const toggleFriend = (id: string) => {
+    setSelectedFriends((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Use mock users as potential friends (skip index 0 = current user)
+  const friends = allUsers.slice(1);
+
   return (
-    <LinearGradient
-      colors={[Colors.appBackgroundDeep, Colors.appBackground]}
-      style={styles.container}
-    >
-      <NavHeader title="New Crew" onBack={() => router.back()} />
+    <View className="flex-1 bg-surface">
+      {/* Header */}
+      <View className="pt-14 px-6 pb-4 flex-row justify-between items-center">
+        <Pressable
+          onPress={() => router.back()}
+          className="w-12 h-12 items-center justify-center rounded-full bg-surface-container-highest"
+        >
+          <Ionicons name="close" size={22} color="#3F6377" />
+        </Pressable>
+        <Text className="font-heading-extrabold text-2xl text-primary italic tracking-tighter -rotate-2">
+          down
+        </Text>
+        <View className="w-12 h-12" />
+      </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingBottom: 120, gap: 32 }}
+        className="px-6"
       >
         {/* Hero */}
-        <View style={styles.hero}>
-          <Text style={{ fontSize: 56 }}>👥</Text>
-          <Text style={styles.heroTitle}>Start a new crew</Text>
-          <Text style={styles.heroSubtitle}>
-            Give your group a name and start planning together.
+        <View className="items-center gap-2 pt-4">
+          <Text className="font-heading-extrabold text-3xl text-primary tracking-tight text-center">
+            r u down?
+          </Text>
+          <Text className="font-body text-tertiary italic text-base">
+            time to assemble the dream team.
           </Text>
         </View>
 
-        {/* Name input card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="people" size={15} color={Colors.accentBlue} />
+        {/* Squad name card */}
+        <SketchCard tilt={-1.2} className="gap-4">
+          <SectionLabel text="give your squad a name" />
+          <View className="flex-row items-center gap-4">
+            <View className="w-16 h-16 rounded-full bg-secondary-container items-center justify-center">
+              <Text className="text-2xl">🎉</Text>
             </View>
-            <Text style={styles.cardHeaderText}>What's the crew called?</Text>
+            <View className="flex-1">
+              <FilledInput
+                placeholder="The Clique..."
+                value={groupName}
+                onChangeText={setGroupName}
+                style={{ fontFamily: "PlusJakartaSans_600SemiBold", fontSize: 18 }}
+              />
+            </View>
           </View>
-          <TextInput
-            placeholder="Friday Squad, Work Buds, Weekend Warriors…"
-            placeholderTextColor={Colors.textTertiary}
-            value={groupName}
-            onChangeText={setGroupName}
-            style={styles.input}
+        </SketchCard>
+
+        {/* Friends selection */}
+        <View className="gap-4">
+          <View className="flex-row justify-between items-end">
+            <View>
+              <Text className="font-heading text-xl text-on-surface">
+                Add your crew
+              </Text>
+              <Text className="font-label text-xs text-tertiary italic">
+                don't flake on your crew!
+              </Text>
+            </View>
+            <Pressable className="flex-row items-center gap-1">
+              <Ionicons name="search" size={16} color="#3F6377" />
+              <Text className="font-body-semibold text-sm text-primary">
+                Find more
+              </Text>
+            </Pressable>
+          </View>
+
+          <FriendSelectionGrid
+            friends={friends}
+            selectedIds={selectedFriends}
+            onToggle={toggleFriend}
+            onInvite={() => {}}
           />
         </View>
 
-        {/* Create button */}
-        <AppButton
-          title={isCreating ? 'Creating…' : '🚀  Create Crew'}
+        {/* Hot suggestions */}
+        <View
+          className="bg-primary-container/30 p-5 rounded-card gap-3"
+          style={{ transform: [{ rotate: "1.5deg" }] }}
+        >
+          <Text className="font-heading text-xs text-on-primary-container uppercase tracking-widest">
+            hot suggestions
+          </Text>
+          <View className="flex-row flex-wrap gap-2">
+            {SUGGESTIONS.map((s) => (
+              <Pressable
+                key={s}
+                onPress={() => setGroupName(s)}
+                className="bg-surface-container-lowest px-4 py-2 rounded-chip border border-primary/10"
+              >
+                <Text className="font-body-medium text-sm text-on-surface">
+                  {s}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Fixed bottom CTA */}
+      <View
+        className="absolute bottom-0 left-0 right-0 p-6 bg-surface-container-lowest/80"
+        style={{ backdropFilter: "blur(24px)" }}
+      >
+        <BouncyButton
+          title="Create Squad"
+          icon="rocket-outline"
           onPress={handleCreate}
-          variant="primary"
           disabled={!canCreate || isCreating}
           loading={isCreating}
         />
-      </ScrollView>
-    </LinearGradient>
+      </View>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.xl,
-  },
-  hero: {
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingTop: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
-  },
-  heroTitle: {
-    ...Typography.title2,
-    color: Colors.textOnBlue,
-  },
-  heroSubtitle: {
-    ...Typography.callout,
-    color: Colors.textOnBlueMuted,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: Colors.cardBackground,
-    borderRadius: Radius.xxl,
-    padding: Spacing.lg,
-    gap: Spacing.sm,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.accentBlueMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardHeaderText: {
-    ...Typography.headline,
-    color: Colors.textPrimary,
-  },
-  input: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-    backgroundColor: Colors.inputBackground,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
-  },
-});
