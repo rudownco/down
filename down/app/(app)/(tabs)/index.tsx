@@ -4,11 +4,8 @@
 import React, { useState } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { EventCardNew } from "../../../components/EventCardNew";
-import { JellybeanChip } from "../../../components/JellybeanChip";
-import { FloatingActionButton } from "../../../components/FloatingActionButton";
-import { AvatarCircle } from "../../../components/AvatarCircle";
-import { useAuthStore } from "../../../src/stores/authStore";
+import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
+import { useAuth } from "../../../src/context/AuthContext";
 import { getGreeting } from "../../../src/utils/greeting";
 import { MockEvents, MockGroups } from "../../../src/mocks/data";
 
@@ -20,7 +17,7 @@ const FILTERS = [
 
 export default function EventHubScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("active");
 
   const firstName = user?.name.split(" ")[0] ?? "Alex";

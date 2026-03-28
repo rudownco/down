@@ -5,13 +5,8 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { CategoryPill } from "../../../components/CategoryPill";
-import { FilledInput } from "../../../components/FilledInput";
-import { JellybeanChip } from "../../../components/JellybeanChip";
-import { SketchCard } from "../../../components/SketchCard";
-import { BouncyButton } from "../../../components/BouncyButton";
-import { SectionLabel } from "../../../components/SectionLabel";
-import { useAuthStore } from "../../../src/stores/authStore";
+import { CategoryPill, FilledInput, JellybeanChip, SketchCard, BouncyButton, SectionLabel } from "../../../components";
+import { useAuth } from "../../../src/context/AuthContext";
 import { useEventStore } from "../../../src/stores/eventStore";
 import * as api from "../../../src/services/api";
 import { EventSuggestion, VotingOption } from "../../../src/types";
@@ -35,7 +30,7 @@ const DRESS_CODES = [
 export default function CreateEventScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { addEvent } = useEventStore();
 
   const [title, setTitle] = useState("");

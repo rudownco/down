@@ -2,8 +2,11 @@
 
 import "../global.css";
 
+import { StyleSheet } from "react-native";
 import { useEffect } from "react";
-import { Stack } from "expo-router";
+
+StyleSheet.setFlag?.("darkMode", "class");
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import {
@@ -16,10 +19,10 @@ import {
   BeVietnamPro_500Medium,
   BeVietnamPro_600SemiBold,
 } from "@expo-google-fonts/be-vietnam-pro";
-import { useAuthStore } from "../src/stores/authStore";
+import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
-export default function RootLayout() {
-  const { user, isRestoringSession, restoreSession } = useAuthStore();
+function RootLayoutNav() {
+  const { user, isLoading } = useAuth();
 
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_600SemiBold,
@@ -31,11 +34,15 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    restoreSession();
-  }, []);
+    if (isLoading || !fontsLoaded) return;
+    if (user) {
+      router.replace('/(app)');
+    } else {
+      router.replace('/(auth)/login');
+    }
+  }, [user, isLoading, fontsLoaded]);
 
-  // Wait for fonts and session restore
-  if (!fontsLoaded || isRestoringSession) {
+  if (!fontsLoaded || isLoading) {
     return (
       <>
         <StatusBar style="dark" />
@@ -50,12 +57,18 @@ export default function RootLayout() {
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="(app)" />
-        ) : (
-          <Stack.Screen name="(auth)" />
-        )}
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(app)" />
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }

@@ -1,12 +1,11 @@
 // Profile tab — placeholder
 import React from "react";
 import { View, Text, Pressable, Alert } from "react-native";
-import { useAuthStore } from "../../../src/stores/authStore";
-import { AvatarCircle } from "../../../components/AvatarCircle";
-import { BouncyButton } from "../../../components/BouncyButton";
+import { useAuth } from "../../../src/context/AuthContext";
+import { AvatarCircle, BouncyButton } from "../../../components";
 
 export default function ProfileTab() {
-  const { user, signOut } = useAuthStore();
+  const { user, signOut } = useAuth();
 
   return (
     <View className="flex-1 bg-surface items-center justify-center gap-6 px-6">

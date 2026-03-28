@@ -12,11 +12,11 @@ import {
   Easing,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useAuthStore } from "../../src/stores/authStore";
+import { useAuth } from "../../src/context/AuthContext";
 
 export default function LoginScreen() {
   const { width } = useWindowDimensions();
-  const { signInMock, isLoading } = useAuthStore();
+  const { signInWithGoogle, isLoading } = useAuth();
 
   // Animation values
   const ruOffset = useRef(new Animated.Value(-120)).current;
@@ -154,7 +154,7 @@ export default function LoginScreen() {
         }}
       >
         <Pressable
-          onPress={() => signInMock()}
+          onPress={() => signInWithGoogle()}
           className="flex-row items-center justify-center gap-3 bg-surface-container-lowest py-4 px-6 rounded-button border border-outline-variant/30"
           style={{
             shadowColor: "#131D23",
@@ -171,7 +171,7 @@ export default function LoginScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => signInMock()}
+          onPress={() => signInWithGoogle()}
           className="flex-row items-center justify-center gap-3 bg-surface-container-lowest py-4 px-6 rounded-button border border-outline-variant/30"
           style={{
             shadowColor: "#131D23",

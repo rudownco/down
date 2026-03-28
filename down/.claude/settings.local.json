@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start:*)",
+      "Bash(npx expo:*)",
+      "Bash(find C:/Users/david/Documents/Projects/down/down -name *.ts -o -name *.tsx -o -name *.js)"
+    ]
+  }
+}
