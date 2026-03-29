@@ -22,8 +22,7 @@ import {
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 
 function RootLayoutNav() {
-  const { user, isLoading } = useAuth();
-
+  const { session, isLoading } = useAuth();
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
@@ -34,13 +33,13 @@ function RootLayoutNav() {
   });
 
   useEffect(() => {
-    if (isLoading || !fontsLoaded) return;
-    if (user) {
+    if (!fontsLoaded || isLoading) return;
+    if (session) {
       router.replace('/(app)');
     } else {
       router.replace('/(auth)/login');
     }
-  }, [user, isLoading, fontsLoaded]);
+  }, [session, isLoading, fontsLoaded]);
 
   if (!fontsLoaded || isLoading) {
     return (

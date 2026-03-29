@@ -3,28 +3,8 @@
 
 import { supabase } from './supabase';
 import { mockApi } from './mockApi';
-import { DownGroup, EventSuggestion, RSVP, RSVPStatus, User } from '../types';
+import { DownGroup, EventSuggestion, RSVP, RSVPStatus } from '../types';
 import { relativeFormatted } from '../utils/dateFormatting';
-
-export type AuthProvider = 'apple' | 'google';
-
-// ─── Auth ───────────────────────────────────────────────
-
-export async function restoreSession(): Promise<User | null> {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return null;
-  return mapUser(data.session);
-}
-
-export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
-}
-
-function mapUser(session: any): User {
-  const meta = session.user.user_metadata || {};
-  const name = meta.full_name || meta.name || session.user.email || 'User';
-  return { id: session.user.id, name };
-}
 
 // ─── Groups ─────────────────────────────────────────────
 

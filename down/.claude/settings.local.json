@@ -3,7 +3,17 @@
     "allow": [
       "Bash(npm start:*)",
       "Bash(npx expo:*)",
-      "Bash(find C:/Users/david/Documents/Projects/down/down -name *.ts -o -name *.tsx -o -name *.js)"
+      "Bash(find C:/Users/david/Documents/Projects/down/down -name *.ts -o -name *.tsx -o -name *.js)",
+      "Bash(xargs kill:*)",
+      "Bash(for port:*)",
+      "Bash(do lsof:*)",
+      "Bash(done)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(npm uninstall:*)"
     ]
   }
 }
