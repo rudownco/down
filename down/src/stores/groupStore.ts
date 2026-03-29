@@ -10,7 +10,7 @@ interface GroupState {
   isLoading: boolean;
   error: string | null;
 
-  loadGroups: (userId: string) => Promise<void>;
+  loadGroups: () => Promise<void>;
   addGroup: (group: DownGroup) => void;
 }
 
@@ -19,10 +19,10 @@ export const useGroupStore = create<GroupState>((set) => ({
   isLoading: false,
   error: null,
 
-  loadGroups: async (userId) => {
+  loadGroups: async () => {
     set({ isLoading: true, error: null });
     try {
-      const groups = await api.fetchGroups(userId);
+      const groups = await api.fetchGroups();
       set({ groups, isLoading: false });
     } catch (e: any) {
       set({ error: e.message, isLoading: false });

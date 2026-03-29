@@ -16,13 +16,9 @@ interface GroupResponse {
   member_ids: string[];
 }
 
-export async function fetchGroups(userId: string): Promise<DownGroup[]> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
-
+export async function fetchGroups(): Promise<DownGroup[]> {
   const { data, error } = await supabase.functions.invoke('get-user-groups', {
     method: 'GET',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (error) throw error;
@@ -38,12 +34,8 @@ export async function fetchGroups(userId: string): Promise<DownGroup[]> {
 }
 
 export async function createGroup(name: string): Promise<DownGroup> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
-
   const { data, error } = await supabase.functions.invoke('create-group', {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: { name },
   });
 
