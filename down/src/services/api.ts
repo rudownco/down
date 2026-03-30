@@ -3,28 +3,8 @@
 
 import { supabase } from './supabase';
 import { mockApi } from './mockApi';
-import { DownGroup, EventSuggestion, RSVP, RSVPStatus, User } from '../types';
+import { DownGroup, EventSuggestion, RSVP, RSVPStatus } from '../types';
 import { relativeFormatted } from '../utils/dateFormatting';
-
-export type AuthProvider = 'apple' | 'google';
-
-// ─── Auth ───────────────────────────────────────────────
-
-export async function restoreSession(): Promise<User | null> {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return null;
-  return mapUser(data.session);
-}
-
-export async function signOut(): Promise<void> {
-  await supabase.auth.signOut();
-}
-
-function mapUser(session: any): User {
-  const meta = session.user.user_metadata || {};
-  const name = meta.full_name || meta.name || session.user.email || 'User';
-  return { id: session.user.id, name };
-}
 
 // ─── Groups ─────────────────────────────────────────────
 
@@ -36,13 +16,9 @@ interface GroupResponse {
   member_ids: string[];
 }
 
-export async function fetchGroups(userId: string): Promise<DownGroup[]> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
-
+export async function fetchGroups(): Promise<DownGroup[]> {
   const { data, error } = await supabase.functions.invoke('get-user-groups', {
     method: 'GET',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
   if (error) throw error;
@@ -58,12 +34,8 @@ export async function fetchGroups(userId: string): Promise<DownGroup[]> {
 }
 
 export async function createGroup(name: string): Promise<DownGroup> {
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
-
   const { data, error } = await supabase.functions.invoke('create-group', {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: { name },
   });
 

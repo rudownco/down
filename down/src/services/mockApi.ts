@@ -128,10 +128,6 @@ class MockApi {
     };
   }
 
-  async signIn(): Promise<User> {
-    await delay(1200);
-    return currentUser;
-  }
 }
 
 export const mockApi = new MockApi();

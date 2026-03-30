@@ -16,24 +16,11 @@ export function createAuthedClient(req: Request) {
   )
 }
 
-// Creates a Supabase client using the service role key.
-// Bypasses RLS — only use after the user has already been verified.
-export function createServiceClient() {
-  return createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  )
-}
-
 // Extracts and verifies the authenticated user from the request JWT.
 // Throws a 401-friendly error if the token is missing or invalid.
 export async function getUser(req: Request) {
-  const token = req.headers.get("Authorization")?.replace("Bearer ", "")
-  if (!token) throw new Error("Unauthorized")
-
-  // Use service role client to verify the JWT — anon key client cannot validate user tokens
-  const admin = createServiceClient()
-  const { data: { user }, error } = await admin.auth.getUser(token)
+  const supabase = createAuthedClient(req)
+  const { data: { user }, error } = await supabase.auth.getUser()
 
   if (error || !user) throw new Error("Unauthorized")
 

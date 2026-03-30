@@ -4,18 +4,15 @@ import React, { useEffect } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { EventCardNew } from "../../../components/EventCardNew";
-import { AvatarCircle } from "../../../components/AvatarCircle";
-import { SectionLabel } from "../../../components/SectionLabel";
-import { FloatingActionButton } from "../../../components/FloatingActionButton";
-import { useAuthStore } from "../../../src/stores/authStore";
+import { EventCardNew, AvatarCircle, SectionLabel, FloatingActionButton } from "../../../components";
+import { useAuth } from "../../../src/context/AuthContext";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { groups } = useGroupStore();
   const { events, loadEvents } = useEventStore();
 

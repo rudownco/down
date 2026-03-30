@@ -4,10 +4,8 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SketchCard } from "../../../../components/SketchCard";
-import { BouncyButton } from "../../../../components/BouncyButton";
-import { AvatarStack } from "../../../../components/AvatarStack";
-import { useAuthStore } from "../../../../src/stores/authStore";
+import { SketchCard, BouncyButton, AvatarStack } from "../../../../components";
+import { useAuth } from "../../../../src/context/AuthContext";
 import { useEventStore } from "../../../../src/stores/eventStore";
 import * as api from "../../../../src/services/api";
 import { cn } from "../../../../lib/utils";
@@ -15,7 +13,7 @@ import { cn } from "../../../../lib/utils";
 export default function VoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { events } = useEventStore();
   const event = events.find((e) => e.id === id);
 

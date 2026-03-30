@@ -8,13 +8,14 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return err("Method not allowed", 405)
 
   try {
-    console.log("[create-group] auth header:", req.headers.get("Authorization")?.slice(0, 30) ?? "MISSING")
     const user = await getUser(req)
-    console.log("[create-group] user verified:", user.id)
+    console.log("[create-group] user:", user.id)
     const supabase = createAuthedClient(req)
 
     const { name } = await req.json()
     if (!name?.trim()) return err("Group name is required", 400)
+
+    console.log("[create-group] creating group:", name.trim())
 
     // Create the group
     const { data: group, error: groupError } = await supabase
@@ -23,14 +24,24 @@ Deno.serve(async (req: Request) => {
       .select()
       .single()
 
-    if (groupError) throw groupError
+    if (groupError) {
+      console.error("[create-group] insert group error:", groupError)
+      throw groupError
+    }
+
+    console.log("[create-group] group created:", group.id)
 
     // Add the creator as the first member
     const { error: memberError } = await supabase
       .from("group_users")
       .insert({ group_id: group.id, user_id: user.id })
 
-    if (memberError) throw memberError
+    if (memberError) {
+      console.error("[create-group] insert member error:", memberError)
+      throw memberError
+    }
+
+    console.log("[create-group] member added, done")
 
     return ok({
       id:           group.id,
@@ -42,6 +53,7 @@ Deno.serve(async (req: Request) => {
       member_count: 1,
     })
   } catch (e) {
+    console.error("[create-group] error:", e)
     const message = e instanceof Error ? e.message : "Unknown error"
     const status = message === "Unauthorized" ? 401 : 500
     return err(message, status)

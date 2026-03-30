@@ -24,6 +24,12 @@ enabled = false
 # cert_path = "../certs/my-cert.pem"
 # key_path = "../certs/my-key.pem"
 
+[functions.create-group]
+verify_jwt = false
+
+[functions.get-user-groups]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

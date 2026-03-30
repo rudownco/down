@@ -6,6 +6,7 @@ import { getUser, createAuthedClient, err, ok } from "../_shared/auth.ts"
 Deno.serve(async (req: Request) => {
   try {
     const user = await getUser(req)
+    console.log("[get-user-groups] user:", user.id)
     const supabase = createAuthedClient(req)
 
     const { data: groups, error } = await supabase
@@ -22,8 +23,12 @@ Deno.serve(async (req: Request) => {
       )
       .order("last_activity", { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error("[get-user-groups] query error:", error)
+      throw error
+    }
 
+    console.log("[get-user-groups] found", groups.length, "groups")
     const payload = groups.map((group) => ({
       id:            group.id,
       name:          group.name,
@@ -36,6 +41,7 @@ Deno.serve(async (req: Request) => {
 
     return ok(payload)
   } catch (e) {
+    console.error("[get-user-groups] error:", e)
     const message = e instanceof Error ? e.message : "Unknown error"
     const status = message === "Unauthorized" ? 401 : 500
     return err(message, status)

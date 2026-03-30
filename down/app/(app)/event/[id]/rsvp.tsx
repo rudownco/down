@@ -4,12 +4,8 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SketchCard } from "../../../../components/SketchCard";
-import { RSVPButtonRow } from "../../../../components/RSVPButtonRow";
-import { BouncyButton } from "../../../../components/BouncyButton";
-import { AvatarCircle } from "../../../../components/AvatarCircle";
-import { SectionLabel } from "../../../../components/SectionLabel";
-import { useAuthStore } from "../../../../src/stores/authStore";
+import { SketchCard, RSVPButtonRow, BouncyButton, AvatarCircle, SectionLabel } from "../../../../components";
+import { useAuth } from "../../../../src/context/AuthContext";
 import { useEventStore } from "../../../../src/stores/eventStore";
 import * as api from "../../../../src/services/api";
 import type { RSVPStatus } from "../../../../src/types";
@@ -17,7 +13,7 @@ import type { RSVPStatus } from "../../../../src/types";
 export default function RSVPScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { events } = useEventStore();
   const event = events.find((e) => e.id === id);
 

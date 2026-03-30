@@ -1,12 +1,17 @@
 // Profile tab — placeholder
 import React from "react";
 import { View, Text, Pressable, Alert } from "react-native";
-import { useAuthStore } from "../../../src/stores/authStore";
-import { AvatarCircle } from "../../../components/AvatarCircle";
-import { BouncyButton } from "../../../components/BouncyButton";
+import { router } from "expo-router";
+import { useAuth } from "../../../src/context/AuthContext";
+import { AvatarCircle, BouncyButton } from "../../../components";
 
 export default function ProfileTab() {
-  const { user, signOut } = useAuthStore();
+  const { user, signOut } = useAuth();
+
+  function handleSignOut() {
+    signOut();
+    router.replace('/(auth)/login');
+  }
 
   return (
     <View className="flex-1 bg-surface items-center justify-center gap-6 px-6">
@@ -21,7 +26,7 @@ export default function ProfileTab() {
         onPress={() =>
           Alert.alert("Sign Out", "Are you sure?", [
             { text: "Cancel", style: "cancel" },
-            { text: "Sign Out", style: "destructive", onPress: signOut },
+            { text: "Sign Out", style: "destructive", onPress: handleSignOut },
           ])
         }
       />
