@@ -1,0 +1,15 @@
+{
+  "name": "down-monorepo",
+  "private": true,
+  "workspaces": [
+    "common",
+    "down",
+    "web"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=web",
+    "dev:mobile": "npm run start --workspace=down",
+    "build:web": "npm run build --workspace=web",
+    "build:common": "npm run build --workspace=common"
+  }
+}

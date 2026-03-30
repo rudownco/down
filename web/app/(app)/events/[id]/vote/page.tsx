@@ -1,0 +1,112 @@
+'use client';
+
+import { use, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Check } from 'lucide-react';
+import { AvatarStack } from '@down/common';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { MockEvents, getEventEmoji } from '@down/common';
+
+const allEvents = Object.values(MockEvents);
+
+interface Props {
+  params: Promise<{ id: string }>;
+}
+
+export default function VotePage({ params }: Props) {
+  const { id }   = use(params);
+  const event    = allEvents.find((e) => e.id === id);
+  const [selected, setSelected] = useState<string[]>([]);
+
+  if (!event) return null;
+
+  const emoji    = getEventEmoji(event.title);
+  const maxVotes = Math.max(0, ...event.votingOptions.map((o) => o.votes));
+
+  function toggleOption(optionId: string) {
+    setSelected((prev) =>
+      prev.includes(optionId) ? prev.filter((id) => id !== optionId) : [...prev, optionId]
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Link href={`/events/${id}`} className="flex items-center gap-1.5 text-sm text-outline hover:text-on-surface transition-colors w-fit">
+        <ArrowLeft size={16} />
+        Back
+      </Link>
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">{emoji}</span>
+        <div>
+          <h1 className="text-xl font-heading font-bold text-on-surface">{event.title}</h1>
+          <p className="text-sm text-outline">Pick your best times 👇</p>
+        </div>
+      </div>
+
+      {/* Voting options */}
+      <div className="flex flex-col gap-3">
+        {event.votingOptions.map((option) => {
+          const isSelected = selected.includes(option.id);
+          const isLeading  = option.votes === maxVotes && maxVotes > 0;
+          const barWidth   = maxVotes > 0 ? (option.votes / maxVotes) * 100 : 0;
+
+          return (
+            <button
+              key={option.id}
+              onClick={() => toggleOption(option.id)}
+              className={cn(
+                'relative w-full text-left p-4 rounded-card border-2 transition-all overflow-hidden',
+                isSelected
+                  ? 'border-primary bg-primary/5'
+                  : 'border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'
+              )}
+            >
+              {/* Vote bar background */}
+              <div
+                className="absolute inset-0 bg-primary/6 transition-all duration-500"
+                style={{ width: `${barWidth}%` }}
+              />
+
+              <div className="relative flex items-center justify-between">
+                <div>
+                  <p className="font-heading font-semibold text-on-surface">{option.date}</p>
+                  <p className="text-sm text-on-surface-variant">{option.time}</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <AvatarStack users={option.voters} maxVisible={3} size="xs" />
+                  <span className="text-sm font-medium text-on-surface-variant">
+                    {option.votes} {option.votes === 1 ? 'vote' : 'votes'}
+                  </span>
+                  {isLeading && (
+                    <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-chip font-medium">
+                      🔥 Leading
+                    </span>
+                  )}
+                  {isSelected && (
+                    <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <Check size={14} className="text-on-primary" />
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Submit */}
+      <Button
+        variant="primary"
+        size="lg"
+        className="w-full"
+        disabled={selected.length === 0}
+      >
+        {selected.length > 0 ? `Cast Vote (${selected.length})` : 'Select at least one time'}
+      </Button>
+    </div>
+  );
+}
