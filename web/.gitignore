@@ -1,0 +1,8 @@
+# Build output
+.next/
+dist/
+
+# Environment
+.env
+.env.local
+.env*.local
