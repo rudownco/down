@@ -1,6 +1,9 @@
 // Types
 export * from './types';
 
+// Components
+export * from './components';
+
 // Theme tokens
 export * from './theme/tokens';
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { AvatarStack } from '@/components/AvatarStack';
+import { AvatarStack } from '@down/common';
 import { getGroupEmoji, getMemberCountLabel } from '@down/common';
 import type { DownGroup } from '@down/common';
 
@@ -31,7 +31,7 @@ export function GroupCard({ group }: GroupCardProps) {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex items-center justify-between">
-            <AvatarStack users={group.members} max={5} size="xs" />
+            <AvatarStack users={group.members} maxVisible={5} size="xs" />
             <span className="text-xs text-outline">{group.lastActivity}</span>
           </div>
         </CardContent>

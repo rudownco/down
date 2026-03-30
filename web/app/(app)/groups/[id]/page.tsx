@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Plus } from 'lucide-react';
-import { EventCard } from '@/components/EventCard';
-import { AvatarCircle } from '@/components/AvatarCircle';
+import { EventCard } from '@down/common';
+import { AvatarCircle } from '@down/common';
 import { Button } from '@/components/ui/button';
 import {
   allGroups,
@@ -38,7 +38,7 @@ export default async function GroupDetailPage({ params }: Props) {
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         {group.members.map((member) => (
           <div key={member.id} className="flex flex-col items-center gap-1 flex-shrink-0">
-            <AvatarCircle name={member.name} size="md" />
+            <AvatarCircle user={member} size="md" />
             <span className="text-xs text-on-surface-variant">{member.name.split(' ')[0]}</span>
           </div>
         ))}
@@ -71,7 +71,7 @@ export default async function GroupDetailPage({ params }: Props) {
         ) : (
           <div className="flex flex-col gap-3">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} groupId={id} />
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         )}

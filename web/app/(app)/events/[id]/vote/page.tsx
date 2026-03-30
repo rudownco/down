@@ -3,7 +3,7 @@
 import { use, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check } from 'lucide-react';
-import { AvatarStack } from '@/components/AvatarStack';
+import { AvatarStack } from '@down/common';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MockEvents, getEventEmoji } from '@down/common';
@@ -77,7 +77,7 @@ export default function VotePage({ params }: Props) {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <AvatarStack users={option.voters} max={3} size="xs" />
+                  <AvatarStack users={option.voters} maxVisible={3} size="xs" />
                   <span className="text-sm font-medium text-on-surface-variant">
                     {option.votes} {option.votes === 1 ? 'vote' : 'votes'}
                   </span>

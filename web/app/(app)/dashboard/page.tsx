@@ -1,5 +1,5 @@
-import { EventCard } from '@/components/EventCard';
-import { AvatarCircle } from '@/components/AvatarCircle';
+import { EventCard } from '@down/common';
+import { AvatarCircle } from '@down/common';
 import {
   getGreeting,
   currentUser,
@@ -27,7 +27,7 @@ export default function DashboardPage() {
             What&apos;s the move?
           </h1>
         </div>
-        <AvatarCircle name={currentUser.name} size="md" />
+        <AvatarCircle user={currentUser} size="md" />
       </div>
 
       {/* Squad preview */}
@@ -54,8 +54,8 @@ export default function DashboardPage() {
           🔥 Active Hangouts
         </h2>
         <div className="flex flex-col gap-3">
-          {featuredEvents.map(({ event, groupId }) => (
-            <EventCard key={event.id} event={event} groupId={groupId} />
+          {featuredEvents.map(({ event }) => (
+            <EventCard key={event.id} event={event} />
           ))}
         </div>
       </section>

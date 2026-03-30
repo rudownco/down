@@ -3,8 +3,8 @@
 import { notFound } from 'next/navigation';
 import { MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { RSVPButtons } from '@/components/RSVPButtons';
-import { AvatarCircle } from '@/components/AvatarCircle';
+import { RSVPButtons } from '@down/common';
+import { AvatarCircle } from '@down/common';
 import { Badge } from '@/components/ui/badge';
 import {
   MockEvents,
@@ -89,7 +89,7 @@ export default function EventDetailPage({ params }: Props) {
           You pulling up? 👀
         </h2>
         <RSVPButtons
-          current={currentRsvp?.status}
+          selectedStatus={currentRsvp?.status}
           onSelect={handleRsvp}
         />
       </section>
@@ -106,7 +106,7 @@ export default function EventDetailPage({ params }: Props) {
               <div className="flex flex-wrap gap-2">
                 {goingUsers.map((u) => (
                   <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle name={u.name} size="xs" />
+                    <AvatarCircle user={u} size="xs" />
                     <span className="text-sm text-on-surface">{u.name}</span>
                   </div>
                 ))}
@@ -119,7 +119,7 @@ export default function EventDetailPage({ params }: Props) {
               <div className="flex flex-wrap gap-2">
                 {maybeUsers.map((u) => (
                   <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle name={u.name} size="xs" />
+                    <AvatarCircle user={u} size="xs" />
                     <span className="text-sm text-on-surface">{u.name}</span>
                   </div>
                 ))}
@@ -132,7 +132,7 @@ export default function EventDetailPage({ params }: Props) {
               <div className="flex flex-wrap gap-2">
                 {notGoingUsers.map((u) => (
                   <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle name={u.name} size="xs" />
+                    <AvatarCircle user={u} size="xs" />
                     <span className="text-sm text-on-surface">{u.name}</span>
                   </div>
                 ))}
