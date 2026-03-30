@@ -1,0 +1,11 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/page": "app/page.js",
+  "/(app)/dashboard/page": "app/(app)/dashboard/page.js",
+  "/(app)/events/[id]/page": "app/(app)/events/[id]/page.js",
+  "/(app)/groups/[id]/page": "app/(app)/groups/[id]/page.js",
+  "/(app)/events/[id]/vote/page": "app/(app)/events/[id]/vote/page.js",
+  "/(app)/profile/page": "app/(app)/profile/page.js",
+  "/(app)/groups/page": "app/(app)/groups/page.js"
+}

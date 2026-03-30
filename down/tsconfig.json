@@ -5,7 +5,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./*"],
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@down/common": ["../common/src/index.ts"],
+      "@down/common/*": ["../common/src/*"]
     }
   },
   "include": ["nativewind-env.d.ts", "**/*.ts", "**/*.tsx"]
