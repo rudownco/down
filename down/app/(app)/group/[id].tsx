@@ -28,32 +28,28 @@ export default function GroupDetailScreen() {
     if (id) loadEvents(id);
   }, [id]);
 
+  const inviteLoadingRef = useRef(false);
+
   const handleInvite = useCallback(async () => {
-    if (inviteLoading || !id) return;
+    if (inviteLoadingRef.current || !id) return;
+    inviteLoadingRef.current = true;
     setInviteLoading(true);
     try {
-      // Re-use the cached token so we don't create a new one every tap
       if (!cachedToken.current) {
         const result = await createInvite(id);
         cachedToken.current = result.token;
       }
-      // Deep link opens the native app directly — works without web deployment
-      const deepLink = `down://invite/${cachedToken.current}`;
-      // Web URL is included as a fallback for when the site is live
       const webLink = `${WEB_URL}/invite/${cachedToken.current}`;
-      await Share.share({
-        // message: `Join my squad on r u down? 👇\n${webLink}`,
-        url: webLink,
-      });
+      await Share.share({ url: webLink });
     } catch (e: any) {
-      // User cancelled share sheet — not an error worth surfacing
       if (e?.message !== "User did not share") {
         console.error("[Invite] error:", e?.message);
       }
     } finally {
+      inviteLoadingRef.current = false;
       setInviteLoading(false);
     }
-  }, [id, inviteLoading]);
+  }, [id]);
 
   if (!group) {
     return (

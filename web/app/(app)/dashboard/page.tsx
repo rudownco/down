@@ -21,13 +21,17 @@ export default function DashboardPage() {
     if (!user) return;
 
     fetchGroups(supabase)
-      .then((g) => {
+      .then(async (g) => {
         setGroups(g);
-        if (g[0]) {
-          fetchEvents(supabase, g[0].id)
-            .then(setEvents)
-            .catch(() => {});
-        }
+        const allEvents: EventSuggestion[] = [];
+        await Promise.all(
+          g.map((group) =>
+            fetchEvents(supabase, group.id)
+              .then((evts) => allEvents.push(...evts))
+              .catch(() => {})
+          )
+        );
+        setEvents(allEvents);
       })
       .catch(() => {});
   }, [user]);
