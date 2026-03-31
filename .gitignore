@@ -16,5 +16,8 @@ build/
 .env.local
 .env*.local
 
+# Supabase CLI
+supabase/.temp/
+
 # OS
 .DS_Store

@@ -36,7 +36,12 @@ Deno.serve(async (req: Request) => {
 
     // Upsert membership
     const { error: memberErr } = await supabase.from("group_users").upsert(
-      { group_id: invite.group_id, user_id: user.id },
+      {
+        group_id: invite.group_id,
+        user_id: user.id,
+        role: "invitee",
+        joined_at: new Date().toISOString(),
+      },
       { onConflict: "group_id,user_id" }
     )
     if (memberErr) {
