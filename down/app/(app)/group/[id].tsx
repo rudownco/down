@@ -1,13 +1,16 @@
 // Group Detail screen — Social Sketchbook aesthetic
 
-import React, { useEffect } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { View, Text, ScrollView, Pressable, Share, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, AvatarCircle, SectionLabel, FloatingActionButton } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
+import { createInvite } from "../../../src/services/api";
+
+const WEB_URL = process.env.EXPO_PUBLIC_APP_URL ?? "https://rudown.co";
 
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,11 +19,41 @@ export default function GroupDetailScreen() {
   const { groups } = useGroupStore();
   const { events, loadEvents } = useEventStore();
 
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const cachedToken = useRef<string | null>(null);
+
   const group = groups.find((g) => g.id === id);
 
   useEffect(() => {
     if (id) loadEvents(id);
   }, [id]);
+
+  const handleInvite = useCallback(async () => {
+    if (inviteLoading || !id) return;
+    setInviteLoading(true);
+    try {
+      // Re-use the cached token so we don't create a new one every tap
+      if (!cachedToken.current) {
+        const result = await createInvite(id);
+        cachedToken.current = result.token;
+      }
+      // Deep link opens the native app directly — works without web deployment
+      const deepLink = `down://invite/${cachedToken.current}`;
+      // Web URL is included as a fallback for when the site is live
+      const webLink = `${WEB_URL}/invite/${cachedToken.current}`;
+      await Share.share({
+        // message: `Join my squad on r u down? 👇\n${webLink}`,
+        url: webLink,
+      });
+    } catch (e: any) {
+      // User cancelled share sheet — not an error worth surfacing
+      if (e?.message !== "User did not share") {
+        console.error("[Invite] error:", e?.message);
+      }
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [id, inviteLoading]);
 
   if (!group) {
     return (
@@ -70,9 +103,12 @@ export default function GroupDetailScreen() {
                 </Text>
               </View>
             ))}
-            <Pressable className="items-center gap-1.5">
+            <Pressable onPress={handleInvite} disabled={inviteLoading} className="items-center gap-1.5">
               <View className="w-14 h-14 rounded-full border-2 border-dashed border-outline-variant items-center justify-center">
-                <Ionicons name="add" size={22} color="#677A86" />
+                {inviteLoading
+                  ? <ActivityIndicator size="small" color="#677A86" />
+                  : <Ionicons name="add" size={22} color="#677A86" />
+                }
               </View>
               <Text className="font-body-medium text-xs text-outline">Invite</Text>
             </Pressable>

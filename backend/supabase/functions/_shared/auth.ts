@@ -1,5 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
+export const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+}
+
 // Creates a Supabase client scoped to the requesting user's JWT.
 // RLS policies will automatically apply for all queries made with this client.
 export function createAuthedClient(req: Request) {
@@ -13,6 +19,15 @@ export function createAuthedClient(req: Request) {
         },
       },
     }
+  )
+}
+
+// Service-role client — bypasses RLS. Use for DB operations in edge functions
+// where access control is already handled by getUser().
+export function createServiceClient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   )
 }
 
@@ -31,11 +46,11 @@ export async function getUser(req: Request) {
 export const ok = (data: unknown) =>
   new Response(JSON.stringify(data), {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   })
 
 export const err = (message: string, status = 400) =>
   new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   })

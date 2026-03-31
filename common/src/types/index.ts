@@ -6,7 +6,7 @@ export interface User {
 }
 
 // ─── Group ──────────────────────────────────────────────
-export interface DownGroup {
+export interface Group {
   id: string;
   name: string;
   members: User[];
@@ -72,11 +72,40 @@ export interface RSVP {
   updatedAt: string;
 }
 
+// ─── Invites ────────────────────────────────────────────
+export interface AcceptInviteResult {
+  groupId: string;
+  groupName: string;
+}
+
+export type InviteErrorCode =
+  | 'expired'
+  | 'already_used'
+  | 'already_member'
+  | 'not_found'
+  | 'unauthenticated'
+  | 'unknown';
+
+export interface CreateInviteResult {
+  token: string;
+  expires_at: string;
+}
+
 // ─── API Response shapes (Supabase edge functions) ──────
+export interface GroupMemberResponse {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+}
+
 export interface GroupResponse {
   id: string;
   name: string;
   last_activity: string;
   member_count: number;
   member_ids: string[];
+  members: GroupMemberResponse[];
 }
+
+// ─── Convenience alias used throughout the apps ─────────
+export type DownGroup = Group;

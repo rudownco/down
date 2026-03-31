@@ -20,6 +20,7 @@ import {
   BeVietnamPro_600SemiBold,
 } from "@expo-google-fonts/be-vietnam-pro";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
+import { pendingInvite } from "../src/utils/pendingInvite";
 
 function RootLayoutNav() {
   const { session, isLoading } = useAuth();
@@ -34,8 +35,16 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!fontsLoaded || isLoading) return;
+
     if (session) {
-      router.replace('/(app)');
+      // After login, check if there's a saved invite token to resume
+      pendingInvite.get().then((token) => {
+        if (token) {
+          router.replace(`/invite/${token}`);
+        } else {
+          router.replace('/(app)');
+        }
+      });
     } else {
       router.replace('/(auth)/login');
     }
@@ -59,6 +68,7 @@ function RootLayoutNav() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
+        <Stack.Screen name="invite" />
       </Stack>
     </>
   );
