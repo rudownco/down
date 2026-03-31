@@ -1,7 +1,32 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 import { Home, Users, User } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { session, isLoading } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!session) {
+      router.replace(`/login?redirect=${encodeURIComponent(pathname)}`);
+    }
+  }, [session, isLoading, router, pathname]);
+
+  // Show nothing while checking auth — avoids flash of protected content
+  if (isLoading || !session) {
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-surface flex flex-col">
       {/* Top nav */}

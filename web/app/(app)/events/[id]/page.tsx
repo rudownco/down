@@ -1,46 +1,69 @@
 'use client';
 
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { RSVPButtons } from '@down/common';
-import { AvatarCircle } from '@down/common';
-import { Badge } from '@/components/ui/badge';
-import {
-  MockEvents,
-  EventStatusMeta,
-  getEventEmoji,
-  getRsvpUsers,
-  allUsers,
-  currentUser,
-} from '@down/common';
-import type { RSVPStatus, EventStatus } from '@down/common';
-import { use } from 'react';
+import { AvatarCircle, EventStatusMeta, getEventEmoji, getRsvpUsers } from '@down/common';
+import { fetchGroups, fetchEvents } from '@down/common';
+import type { EventSuggestion } from '@down/common';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import EventRsvpSection from './EventRsvpSection';
 
-const allEvents = Object.values(MockEvents);
+export default function EventDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [event, setEvent] = useState<EventSuggestion | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
+  useEffect(() => {
+    if (!user || !id) return;
 
-export default function EventDetailPage({ params }: Props) {
-  const { id } = use(params);
-  const event  = allEvents.find((e) => e.id === id);
-  if (!event) notFound();
+    (async () => {
+      try {
+        const groups = await fetchGroups(supabase);
+        for (const group of groups) {
+          const events = await fetchEvents(supabase, group.id).catch(() => []);
+          const found = events.find((e) => e.id === id);
+          if (found) {
+            setEvent(found);
+            return;
+          }
+        }
+        setNotFound(true);
+      } catch {
+        setNotFound(true);
+      }
+    })();
+  }, [user, id]);
+
+  if (notFound) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <span className="text-4xl">🤷</span>
+        <p className="font-heading font-bold text-on-surface">Event not found</p>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const emoji = getEventEmoji(event.title);
-  const meta  = EventStatusMeta[event.status];
-
-  const goingUsers    = getRsvpUsers(event, 'going',     allUsers);
-  const maybeUsers    = getRsvpUsers(event, 'maybe',     allUsers);
-  const notGoingUsers = getRsvpUsers(event, 'not_going', allUsers);
-
-  const currentRsvp = event.rsvps.find((r) => r.userId === currentUser.id);
-
-  function handleRsvp(status: RSVPStatus) {
-    // Will wire to Supabase once backend is ready
-    console.log('RSVP:', status);
-  }
+  const meta = EventStatusMeta[event.status];
+  const allMembers = event.attendees;
+  const goingUsers = getRsvpUsers(event, 'going', allMembers);
+  const maybeUsers = getRsvpUsers(event, 'maybe', allMembers);
+  const notGoingUsers = getRsvpUsers(event, 'not_going', allMembers);
+  const currentRsvp = user
+    ? event.rsvps.find((r) => r.userId === user.id)
+    : undefined;
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,9 +80,9 @@ export default function EventDetailPage({ params }: Props) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-heading font-bold text-on-surface">{event.title}</h1>
-              <Badge variant={event.status as EventStatus}>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-container text-on-surface">
                 {meta.emoji} {meta.label}
-              </Badge>
+              </span>
             </div>
             {event.description && (
               <p className="text-on-surface-variant text-sm mt-1">{event.description}</p>
@@ -84,63 +107,57 @@ export default function EventDetailPage({ params }: Props) {
       </div>
 
       {/* RSVP section */}
-      <section className="bg-surface-container-low rounded-card p-4">
-        <h2 className="text-sm font-heading font-semibold text-on-surface mb-3">
-          You pulling up? 👀
-        </h2>
-        <RSVPButtons
-          selectedStatus={currentRsvp?.status}
-          onSelect={handleRsvp}
-        />
-      </section>
+      <EventRsvpSection eventId={id} currentRsvpStatus={currentRsvp?.status} />
 
       {/* Attendees */}
-      <section>
-        <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide mb-3">
-          Who&apos;s down
-        </h2>
-        <div className="flex flex-col gap-4">
-          {goingUsers.length > 0 && (
-            <div>
-              <p className="text-xs text-outline mb-2">✅ Going ({goingUsers.length})</p>
-              <div className="flex flex-wrap gap-2">
-                {goingUsers.map((u) => (
-                  <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle user={u} size="xs" />
-                    <span className="text-sm text-on-surface">{u.name}</span>
-                  </div>
-                ))}
+      {allMembers.length > 0 && (
+        <section>
+          <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide mb-3">
+            Who&apos;s down
+          </h2>
+          <div className="flex flex-col gap-4">
+            {goingUsers.length > 0 && (
+              <div>
+                <p className="text-xs text-outline mb-2">✅ Going ({goingUsers.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  {goingUsers.map((u) => (
+                    <div key={u.id} className="flex items-center gap-1.5">
+                      <AvatarCircle user={u} size="xs" />
+                      <span className="text-sm text-on-surface">{u.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {maybeUsers.length > 0 && (
-            <div>
-              <p className="text-xs text-outline mb-2">🤔 Maybe ({maybeUsers.length})</p>
-              <div className="flex flex-wrap gap-2">
-                {maybeUsers.map((u) => (
-                  <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle user={u} size="xs" />
-                    <span className="text-sm text-on-surface">{u.name}</span>
-                  </div>
-                ))}
+            )}
+            {maybeUsers.length > 0 && (
+              <div>
+                <p className="text-xs text-outline mb-2">🤔 Maybe ({maybeUsers.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  {maybeUsers.map((u) => (
+                    <div key={u.id} className="flex items-center gap-1.5">
+                      <AvatarCircle user={u} size="xs" />
+                      <span className="text-sm text-on-surface">{u.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          {notGoingUsers.length > 0 && (
-            <div>
-              <p className="text-xs text-outline mb-2">😢 Can&apos;t make it ({notGoingUsers.length})</p>
-              <div className="flex flex-wrap gap-2">
-                {notGoingUsers.map((u) => (
-                  <div key={u.id} className="flex items-center gap-1.5">
-                    <AvatarCircle user={u} size="xs" />
-                    <span className="text-sm text-on-surface">{u.name}</span>
-                  </div>
-                ))}
+            )}
+            {notGoingUsers.length > 0 && (
+              <div>
+                <p className="text-xs text-outline mb-2">😢 Can&apos;t make it ({notGoingUsers.length})</p>
+                <div className="flex flex-wrap gap-2">
+                  {notGoingUsers.map((u) => (
+                    <div key={u.id} className="flex items-center gap-1.5">
+                      <AvatarCircle user={u} size="xs" />
+                      <span className="text-sm text-on-surface">{u.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

@@ -8,7 +8,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { SketchCard, FilledInput, JellybeanChip, FriendSelectionGrid, BouncyButton, SectionLabel } from "../../components";
 import * as api from "../../src/services/api";
 import { useGroupStore } from "../../src/stores/groupStore";
-import { allUsers } from "../../src/mocks/data";
 
 const SUGGESTIONS = [
   "The Supper Club",
@@ -49,8 +48,8 @@ export default function CreateGroupScreen() {
     });
   };
 
-  // Use mock users as potential friends (skip index 0 = current user)
-  const friends = allUsers.slice(1);
+  // Friends list will come from a contacts/friends API once available
+  const friends: { id: string; name: string; avatarUrl?: string }[] = [];
 
   return (
     <View className="flex-1 bg-surface">

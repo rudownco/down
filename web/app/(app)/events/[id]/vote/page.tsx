@@ -1,34 +1,61 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { ArrowLeft, Check } from 'lucide-react';
-import { AvatarStack } from '@down/common';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { MockEvents, getEventEmoji } from '@down/common';
+import { getEventEmoji } from '@down/common';
+import { fetchGroups, fetchEvents } from '@down/common';
+import type { EventSuggestion } from '@down/common';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
+import VoteOptions from './VoteOptions';
 
-const allEvents = Object.values(MockEvents);
+export default function VotePage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [event, setEvent] = useState<EventSuggestion | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
+  useEffect(() => {
+    if (!user || !id) return;
 
-export default function VotePage({ params }: Props) {
-  const { id }   = use(params);
-  const event    = allEvents.find((e) => e.id === id);
-  const [selected, setSelected] = useState<string[]>([]);
+    (async () => {
+      try {
+        const groups = await fetchGroups(supabase);
+        for (const group of groups) {
+          const events = await fetchEvents(supabase, group.id).catch(() => []);
+          const found = events.find((e) => e.id === id);
+          if (found) {
+            setEvent(found);
+            return;
+          }
+        }
+        setNotFound(true);
+      } catch {
+        setNotFound(true);
+      }
+    })();
+  }, [user, id]);
 
-  if (!event) return null;
-
-  const emoji    = getEventEmoji(event.title);
-  const maxVotes = Math.max(0, ...event.votingOptions.map((o) => o.votes));
-
-  function toggleOption(optionId: string) {
-    setSelected((prev) =>
-      prev.includes(optionId) ? prev.filter((id) => id !== optionId) : [...prev, optionId]
+  if (notFound) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <span className="text-4xl">🤷</span>
+        <p className="font-heading font-bold text-on-surface">Event not found</p>
+      </div>
     );
   }
+
+  if (!event) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const emoji = getEventEmoji(event.title);
 
   return (
     <div className="flex flex-col gap-6">
@@ -47,66 +74,11 @@ export default function VotePage({ params }: Props) {
       </div>
 
       {/* Voting options */}
-      <div className="flex flex-col gap-3">
-        {event.votingOptions.map((option) => {
-          const isSelected = selected.includes(option.id);
-          const isLeading  = option.votes === maxVotes && maxVotes > 0;
-          const barWidth   = maxVotes > 0 ? (option.votes / maxVotes) * 100 : 0;
-
-          return (
-            <button
-              key={option.id}
-              onClick={() => toggleOption(option.id)}
-              className={cn(
-                'relative w-full text-left p-4 rounded-card border-2 transition-all overflow-hidden',
-                isSelected
-                  ? 'border-primary bg-primary/5'
-                  : 'border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'
-              )}
-            >
-              {/* Vote bar background */}
-              <div
-                className="absolute inset-0 bg-primary/6 transition-all duration-500"
-                style={{ width: `${barWidth}%` }}
-              />
-
-              <div className="relative flex items-center justify-between">
-                <div>
-                  <p className="font-heading font-semibold text-on-surface">{option.date}</p>
-                  <p className="text-sm text-on-surface-variant">{option.time}</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <AvatarStack users={option.voters} maxVisible={3} size="xs" />
-                  <span className="text-sm font-medium text-on-surface-variant">
-                    {option.votes} {option.votes === 1 ? 'vote' : 'votes'}
-                  </span>
-                  {isLeading && (
-                    <span className="text-xs bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-chip font-medium">
-                      🔥 Leading
-                    </span>
-                  )}
-                  {isSelected && (
-                    <span className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                      <Check size={14} className="text-on-primary" />
-                    </span>
-                  )}
-                </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Submit */}
-      <Button
-        variant="primary"
-        size="lg"
-        className="w-full"
-        disabled={selected.length === 0}
-      >
-        {selected.length > 0 ? `Cast Vote (${selected.length})` : 'Select at least one time'}
-      </Button>
+      <VoteOptions
+        eventId={id}
+        votingOptions={event.votingOptions}
+        userId={user?.id}
+      />
     </div>
   );
 }

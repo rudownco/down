@@ -25,7 +25,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 export function createSupabaseClient(
   url: string,
   key: string,
-  storage?: unknown
+  storage?: unknown,
+  flowType: 'pkce' | 'implicit' = 'pkce'
 ): SupabaseClient {
   return createClient(url, key, {
     auth: {
@@ -33,7 +34,7 @@ export function createSupabaseClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
-      flowType: 'pkce',
+      flowType,
     },
   });
 }

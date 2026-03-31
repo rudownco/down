@@ -15,10 +15,6 @@ export * from './utils/event';
 export * from './utils/greeting';
 export * from './utils/user';
 
-// Mocks
-export * from './mocks/data';
-
 // Services
-export { mockApi }             from './services/mockApi';
 export { createSupabaseClient } from './services/supabase';
 export * from './services/api';

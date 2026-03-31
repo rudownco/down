@@ -56,17 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
       if (result.type === 'success') {
-        // Implicit flow returns tokens in the URL hash fragment
+        // Implicit flow: tokens are returned in the URL hash fragment
         const url = new URL(result.url);
         const params = new URLSearchParams(url.hash.substring(1));
         const access_token = params.get('access_token');
         const refresh_token = params.get('refresh_token');
 
         if (access_token && refresh_token) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
+          const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
           if (sessionError) throw sessionError;
         }
       }

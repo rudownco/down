@@ -1,13 +1,14 @@
 // Event Hub — main dashboard matching Stitch export3
 // "The Social Sketchbook" aesthetic
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
 import { getGreeting } from "../../../src/utils/greeting";
-import { MockEvents, MockGroups } from "../../../src/mocks/data";
+import { useGroupStore } from "../../../src/stores/groupStore";
+import { useEventStore } from "../../../src/stores/eventStore";
 
 const FILTERS = [
   { label: "🔥 active now", key: "active" },
@@ -20,11 +21,20 @@ export default function EventHubScreen() {
   const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("active");
 
-  const firstName = user?.name.split(" ")[0] ?? "Alex";
+  const { groups, loadGroups } = useGroupStore();
+  const { events, loadEvents } = useEventStore();
 
-  // Hardcoded preview data
-  const previewGroup = MockGroups.fridaySquad;
-  const previewEvents = [MockEvents.pizzaNight, MockEvents.movieMarathon, MockEvents.gamingSession];
+  const firstName = user?.name.split(" ")[0] ?? "";
+
+  const firstGroup = groups[0] ?? null;
+
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
+  useEffect(() => {
+    if (firstGroup) loadEvents(firstGroup.id);
+  }, [firstGroup?.id]);
 
   return (
     <View className="flex-1 bg-surface">
@@ -73,32 +83,29 @@ export default function EventHubScreen() {
         </ScrollView>
 
         {/* Squad pill */}
-        <View className="px-6 mb-2">
-          <View className="flex-row items-center gap-3 bg-surface-container-lowest rounded-card p-4"
-            style={{ shadowColor: "#131D23", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 16, elevation: 2 }}
-          >
-            <Text className="text-2xl">👥</Text>
-            <View className="flex-1">
-              <Text className="font-heading text-base text-on-surface">{previewGroup.name}</Text>
-              <Text className="font-body text-xs text-on-surface-variant">
-                {previewGroup.members.length} members · 2h ago
-              </Text>
-            </View>
-            <View className="flex-row -space-x-2">
-              {previewGroup.members.slice(0, 3).map((m) => (
-                <AvatarCircle key={m.id} user={m} size="xs" tilt={0} />
-              ))}
+        {firstGroup && (
+          <View className="px-6 mb-2">
+            <View className="flex-row items-center gap-3 bg-surface-container-lowest rounded-card p-4"
+              style={{ shadowColor: "#131D23", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 16, elevation: 2 }}
+            >
+              <Text className="text-2xl">👥</Text>
+              <View className="flex-1">
+                <Text className="font-heading text-base text-on-surface">{firstGroup.name}</Text>
+                <Text className="font-body text-xs text-on-surface-variant">
+                  {firstGroup.memberCount ?? 0} members · {firstGroup.lastActivity}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        )}
 
         {/* Event cards */}
         <View className="px-6 gap-8">
-          {previewEvents.map((event) => (
+          {events.map((event) => (
             <EventCardNew
               key={event.id}
               event={event}
-              currentUserId={user?.id ?? "u1"}
+              currentUserId={user?.id ?? ""}
               onPress={() =>
                 router.push({
                   pathname: event.status === "voting"
@@ -107,9 +114,7 @@ export default function EventHubScreen() {
                   params: { id: event.id },
                 })
               }
-              onRSVP={(status) => {
-                // Handle inline RSVP
-              }}
+              onRSVP={(_status) => {}}
             />
           ))}
         </View>

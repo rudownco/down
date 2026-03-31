@@ -1,54 +1,145 @@
-import { notFound } from 'next/navigation';
-import { Plus } from 'lucide-react';
-import { EventCard } from '@down/common';
-import { AvatarCircle } from '@down/common';
+'use client';
+
+import { useEffect, useState, useCallback } from 'react';
+import { useParams } from 'next/navigation';
+import { Plus, Link2, Check, Copy } from 'lucide-react';
+import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel } from '@down/common';
+import { fetchGroups, fetchEvents, createInvite } from '@down/common';
+import type { DownGroup, EventSuggestion } from '@down/common';
 import { Button } from '@/components/ui/button';
-import {
-  allGroups,
-  getMockEventsForGroup,
-  getGroupEmoji,
-  getMemberCountLabel,
-} from '@down/common';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/AuthProvider';
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
+export default function GroupDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
+  const [group, setGroup] = useState<DownGroup | null>(null);
+  const [events, setEvents] = useState<EventSuggestion[]>([]);
+  const [notFound, setNotFound] = useState(false);
 
-export default async function GroupDetailPage({ params }: Props) {
-  const { id } = await params;
-  const group  = allGroups.find((g) => g.id === id);
-  if (!group) notFound();
+  const [inviteLink, setInviteLink] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const events = getMockEventsForGroup(id);
-  const emoji  = getGroupEmoji(group.name);
-  const count  = group.memberCount ?? group.members.length;
+  useEffect(() => {
+    if (!user || !id) return;
+
+    fetchGroups(supabase)
+      .then((groups) => {
+        const found = groups.find((g) => g.id === id);
+        if (!found) {
+          setNotFound(true);
+          return;
+        }
+        setGroup(found);
+        return fetchEvents(supabase, id).then(setEvents).catch(() => {});
+      })
+      .catch(() => setNotFound(true));
+  }, [user, id]);
+
+  const handleInvite = useCallback(async () => {
+    if (!id) return;
+    if (inviteLink) {
+      await navigator.clipboard.writeText(inviteLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const result = await createInvite(supabase, id);
+      const link = `${window.location.origin}/invite/${result.token}`;
+      setInviteLink(link);
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Silently fail — could add toast later
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [id, inviteLink]);
+
+  if (notFound) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <span className="text-4xl">🤷</span>
+        <p className="font-heading font-bold text-on-surface">Squad not found</p>
+      </div>
+    );
+  }
+
+  if (!group) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const emoji = getGroupEmoji(group.name);
+  const count = group.memberCount ?? group.members.length;
 
   return (
     <div className="flex flex-col gap-6">
       {/* Group header */}
       <div className="flex items-center gap-4">
         <span className="text-4xl">{emoji}</span>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-heading font-bold text-on-surface">{group.name}</h1>
           <p className="text-sm text-outline">{getMemberCountLabel(count)}</p>
         </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleInvite}
+          disabled={inviteLoading}
+        >
+          {copied ? <Check size={14} /> : inviteLink ? <Copy size={14} /> : <Link2 size={14} />}
+          {inviteLoading ? 'Creating...' : copied ? 'Copied!' : inviteLink ? 'Copy link' : 'Invite'}
+        </Button>
       </div>
 
-      {/* Members row */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {group.members.map((member) => (
-          <div key={member.id} className="flex flex-col items-center gap-1 flex-shrink-0">
-            <AvatarCircle user={member} size="md" />
-            <span className="text-xs text-on-surface-variant">{member.name.split(' ')[0]}</span>
-          </div>
-        ))}
-        <div className="flex flex-col items-center gap-1 flex-shrink-0">
-          <button className="w-10 h-10 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-outline hover:border-primary hover:text-primary transition-colors">
-            <Plus size={16} />
+      {/* Members */}
+      <section>
+        <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide mb-3">
+          Members
+        </h2>
+        <div className="flex items-center gap-3 overflow-x-auto pb-1">
+          {group.members.map((member) => (
+            <div key={member.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
+              <AvatarCircle user={member} size="md" />
+              <span className="text-xs text-on-surface-variant max-w-[56px] truncate text-center">
+                {member.name.split(' ')[0]}
+              </span>
+            </div>
+          ))}
+          <button
+            onClick={handleInvite}
+            disabled={inviteLoading}
+            className="flex flex-col items-center gap-1.5 flex-shrink-0"
+          >
+            <div className="w-10 h-10 rounded-full border-2 border-dashed border-outline-variant flex items-center justify-center text-outline hover:border-primary hover:text-primary transition-colors">
+              <Plus size={16} />
+            </div>
+            <span className="text-xs text-on-surface-variant">Invite</span>
           </button>
-          <span className="text-xs text-on-surface-variant">Invite</span>
         </div>
-      </div>
+      </section>
+
+      {/* Invite link banner */}
+      {inviteLink && (
+        <div className="bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-3 flex items-center gap-3">
+          <Link2 size={16} className="text-primary flex-shrink-0" />
+          <p className="text-sm text-on-surface truncate flex-1">{inviteLink}</p>
+          <button
+            onClick={handleInvite}
+            className="text-xs font-medium text-primary hover:underline flex-shrink-0"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+      )}
 
       {/* Events */}
       <section>
