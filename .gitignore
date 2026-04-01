@@ -19,5 +19,8 @@ build/
 # Supabase CLI
 supabase/.temp/
 
+# Local config
+.mcp.json
+
 # OS
 .DS_Store
