@@ -11,6 +11,7 @@ import {
   submitVotes as _submitVotes,
   submitRSVP as _submitRSVP,
   createInvite as _createInvite,
+  removeGroupMember as _removeGroupMember,
 } from '@down/common';
 import type { DownGroup, EventSuggestion, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
 
@@ -40,4 +41,8 @@ export async function submitVotes(eventId: string, optionIds: string[], userId: 
 
 export async function submitRSVP(eventId: string, status: RSVPStatus, userId: string): Promise<RSVP> {
   return _submitRSVP(supabase, eventId, status, userId);
+}
+
+export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
+  return _removeGroupMember(supabase, groupId, userId);
 }

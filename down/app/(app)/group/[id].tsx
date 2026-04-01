@@ -1,14 +1,16 @@
 // Group Detail screen — Social Sketchbook aesthetic
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, ScrollView, Pressable, Share, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Pressable, Share, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, AvatarCircle, SectionLabel, FloatingActionButton } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
-import { createInvite } from "../../../src/services/api";
+import { createInvite, removeGroupMember } from "../../../src/services/api";
+import { useGroupMembersRealtime } from "@down/common";
+import { supabase } from "../../../src/services/supabase";
 
 const WEB_URL = process.env.EXPO_PUBLIC_APP_URL ?? "https://rudown.co";
 
@@ -16,10 +18,11 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { groups } = useGroupStore();
+  const { groups, removeMember } = useGroupStore();
   const { events, loadEvents } = useEventStore();
 
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const cachedToken = useRef<string | null>(null);
 
   const group = groups.find((g) => g.id === id);
@@ -50,6 +53,39 @@ export default function GroupDetailScreen() {
       setInviteLoading(false);
     }
   }, [id]);
+
+  const isCreator = user?.id === group?.createdBy;
+
+  // Sync member changes from other clients in real-time
+  useGroupMembersRealtime(supabase, id, (event) => {
+    if (event.type === 'removed') removeMember(id, event.userId);
+  });
+
+  const handleRemoveMember = useCallback((memberId: string, memberName: string) => {
+    if (!id || !group) return;
+    Alert.alert(
+      "Remove member",
+      `Remove ${memberName.split(" ")[0]} from ${group.name}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            setRemovingUserId(memberId);
+            try {
+              await removeGroupMember(id, memberId);
+              removeMember(id, memberId);
+            } catch (e: any) {
+              Alert.alert("Couldn't remove member", e?.message ?? "Something went wrong");
+            } finally {
+              setRemovingUserId(null);
+            }
+          },
+        },
+      ]
+    );
+  }, [id, group, removeMember]);
 
   if (!group) {
     return (
@@ -89,16 +125,42 @@ export default function GroupDetailScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}
+            contentContainerStyle={{ paddingHorizontal: 24, gap: 16, paddingTop: 8 }}
           >
-            {group.members.map((member) => (
-              <View key={member.id} className="items-center gap-1.5">
-                <AvatarCircle user={member} size="lg" tilt={1} />
-                <Text className="font-body-medium text-xs text-on-surface">
-                  {member.name.split(" ")[0]}
-                </Text>
-              </View>
-            ))}
+            {group.members.map((member) => {
+              const isCurrentUser = member.id === user?.id;
+              const canRemove = isCreator && !isCurrentUser;
+              return (
+                <Pressable
+                  key={member.id}
+                  className="items-center gap-1.5"
+                  onLongPress={canRemove ? () => handleRemoveMember(member.id, member.name) : undefined}
+                  delayLongPress={400}
+                >
+                  <View className="relative">
+                    <AvatarCircle user={member} size="lg" tilt={1} />
+                    {removingUserId === member.id && (
+                      <View className="absolute inset-0 rounded-full bg-black/40 items-center justify-center">
+                        <ActivityIndicator size="small" color="#fff" />
+                      </View>
+                    )}
+                    {canRemove && (
+                      <Pressable
+                        onPress={() => handleRemoveMember(member.id, member.name)}
+                        className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-error items-center justify-center"
+                        hitSlop={8}
+                      >
+                        <Ionicons name="close" size={11} color="#fff" />
+                      </Pressable>
+                    )}
+                  </View>
+                  <Text className="font-body-medium text-xs text-on-surface">
+                    {member.name.split(" ")[0]}
+                    {isCurrentUser ? " (you)" : ""}
+                  </Text>
+                </Pressable>
+              );
+            })}
             <Pressable onPress={handleInvite} disabled={inviteLoading} className="items-center gap-1.5">
               <View className="w-14 h-14 rounded-full border-2 border-dashed border-outline-variant items-center justify-center">
                 {inviteLoading
