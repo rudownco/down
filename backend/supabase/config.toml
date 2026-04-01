@@ -30,6 +30,9 @@ verify_jwt = false
 [functions.get-user-groups]
 verify_jwt = false
 
+[functions.remove-group-member]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

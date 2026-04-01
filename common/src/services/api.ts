@@ -39,6 +39,7 @@ export async function fetchGroups(supabase: SupabaseClient): Promise<DownGroup[]
     memberCount: g.member_count,
     lastActivity: relativeFormatted(g.last_activity),
     unreadCount: 0,
+    createdBy: g.created_by,
   }));
 }
 
@@ -61,6 +62,7 @@ export async function createGroup(
     memberCount: g.member_count,
     lastActivity: relativeFormatted(g.last_activity),
     unreadCount: 0,
+    createdBy: g.created_by,
   };
 }
 
@@ -117,6 +119,21 @@ export async function submitRSVP(
   });
   if (error) throw error;
   return data as RSVP;
+}
+
+// ─── Group Members ───────────────────────────────────────
+
+export async function removeGroupMember(
+  supabase: SupabaseClient,
+  groupId: string,
+  userId: string
+): Promise<void> {
+  const { error } = await supabase.functions.invoke('remove-group-member', {
+    method: 'POST',
+    body: { group_id: groupId, user_id: userId },
+  });
+  // Treat "not a member" as success — idempotent, concurrent deletes are fine
+  if (error && !error?.message?.includes('not a member')) throw error;
 }
 
 // ─── Invites ─────────────────────────────────────────────

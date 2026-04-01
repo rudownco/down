@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Plus, Link2, Check, Copy } from 'lucide-react';
+import { Plus, Link2, Check, Copy, X } from 'lucide-react';
 import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel } from '@down/common';
-import { fetchGroups, fetchEvents, createInvite } from '@down/common';
+import { fetchGroups, fetchEvents, createInvite, removeGroupMember, useGroupMembersRealtime } from '@down/common';
 import type { DownGroup, EventSuggestion } from '@down/common';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
@@ -20,6 +20,7 @@ export default function GroupDetailPage() {
   const [inviteLink, setInviteLink] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -36,6 +37,23 @@ export default function GroupDetailPage() {
       })
       .catch(() => setNotFound(true));
   }, [user, id]);
+
+  const isCreator = user?.id === group?.createdBy;
+
+  // Sync member changes from other clients in real-time
+  useGroupMembersRealtime(supabase, id, (event) => {
+    if (event.type === 'removed') {
+      setGroup((prev) =>
+        prev
+          ? {
+              ...prev,
+              members: prev.members.filter((m) => m.id !== event.userId),
+              memberCount: Math.max(0, (prev.memberCount ?? prev.members.length) - 1),
+            }
+          : prev
+      );
+    }
+  });
 
   const handleInvite = useCallback(async () => {
     if (!id) return;
@@ -59,6 +77,33 @@ export default function GroupDetailPage() {
       setInviteLoading(false);
     }
   }, [id, inviteLink]);
+
+  const handleRemoveMember = useCallback(async (memberId: string, memberName: string) => {
+    if (!id || !group) return;
+    const confirmed = window.confirm(
+      `Remove ${memberName.split(' ')[0]} from ${group.name}?`
+    );
+    if (!confirmed) return;
+
+    setRemovingUserId(memberId);
+    try {
+      await removeGroupMember(supabase, id, memberId);
+      // Optimistic update
+      setGroup((prev) =>
+        prev
+          ? {
+              ...prev,
+              members: prev.members.filter((m) => m.id !== memberId),
+              memberCount: Math.max(0, (prev.memberCount ?? prev.members.length) - 1),
+            }
+          : prev
+      );
+    } catch (e: any) {
+      alert(e?.message ?? 'Could not remove member');
+    } finally {
+      setRemovingUserId(null);
+    }
+  }, [id, group]);
 
   if (notFound) {
     return (
@@ -106,14 +151,36 @@ export default function GroupDetailPage() {
           Members
         </h2>
         <div className="flex items-center gap-3 overflow-x-auto pb-1">
-          {group.members.map((member) => (
-            <div key={member.id} className="flex flex-col items-center gap-1.5 flex-shrink-0">
-              <AvatarCircle user={member} size="md" />
-              <span className="text-xs text-on-surface-variant max-w-[56px] truncate text-center">
-                {member.name.split(' ')[0]}
-              </span>
-            </div>
-          ))}
+          {group.members.map((member) => {
+            const isCurrentUser = member.id === user?.id;
+            const canRemove = isCreator && !isCurrentUser;
+            return (
+              <div key={member.id} className="relative flex flex-col items-center gap-1.5 flex-shrink-0 group/member">
+                <div className="relative">
+                  <AvatarCircle user={member} size="md" />
+                  {removingUserId === member.id && (
+                    <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {canRemove && (
+                    <button
+                      onClick={() => handleRemoveMember(member.id, member.name)}
+                      disabled={removingUserId !== null}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-error text-on-error flex items-center justify-center opacity-0 group-hover/member:opacity-100 transition-opacity hover:bg-error/80"
+                      title={`Remove ${member.name.split(' ')[0]}`}
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
+                </div>
+                <span className="text-xs text-on-surface-variant max-w-[56px] truncate text-center">
+                  {member.name.split(' ')[0]}
+                  {isCurrentUser ? ' (you)' : ''}
+                </span>
+              </div>
+            );
+          })}
           <button
             onClick={handleInvite}
             disabled={inviteLoading}
