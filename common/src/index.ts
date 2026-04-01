@@ -15,6 +15,9 @@ export * from './utils/event';
 export * from './utils/greeting';
 export * from './utils/user';
 
+// Hooks
+export * from './hooks';
+
 // Services
 export { createSupabaseClient } from './services/supabase';
 export * from './services/api';

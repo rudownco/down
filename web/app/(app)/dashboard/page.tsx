@@ -13,9 +13,8 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<EventSuggestion[]>([]);
   const greeting = getGreeting();
 
-  const currentUser = user
-    ? { id: user.id, name: user.user_metadata?.full_name ?? user.email ?? 'You' }
-    : null;
+  // user is already our domain User type (mapped by shared useAuthState hook)
+  const currentUser = user;
 
   useEffect(() => {
     if (!user) return;
