@@ -1,46 +1,33 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
+/**
+ * React Native auth provider — wraps the shared useAuthState hook.
+ * Adds platform-specific Google sign-in via expo-web-browser.
+ */
+
+import React, { createContext, useContext, useRef, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
+import { useAuthState } from '@down/common';
+import type { AuthState } from '@down/common';
+import type { User } from '../types';
 import { supabase } from '../services/supabase';
-import { User } from '../types';
 
 WebBrowser.maybeCompleteAuthSession();
 
-interface AuthContextValue {
-  session: Session | null;
-  user: User | null;
-  isLoading: boolean;
+interface AuthContextValue extends AuthState {
   error: string | null;
   signInWithGoogle: () => Promise<void>;
-  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useAuthState(supabase);
   const [error, setError] = useState<string | null>(null);
   const isSigningIn = useRef(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setIsLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   async function signInWithGoogle() {
     if (isSigningIn.current) return;
     isSigningIn.current = true;
     setError(null);
-    setIsLoading(true);
 
     try {
       const redirectTo = 'down://auth';
@@ -63,7 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refresh_token = params.get('refresh_token');
 
         if (access_token && refresh_token) {
-          const { error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
           if (sessionError) throw sessionError;
         }
       }
@@ -72,27 +62,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(e.message ?? 'Sign in failed');
     } finally {
       isSigningIn.current = false;
-      setIsLoading(false);
     }
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
-  }
-
-  const user: User | null = session
-    ? {
-        id: session.user.id,
-        name:
-          session.user.user_metadata?.full_name ||
-          session.user.user_metadata?.name ||
-          session.user.email ||
-          'User',
-      }
-    : null;
-
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, error, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{ ...auth, error, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

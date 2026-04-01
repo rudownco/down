@@ -13,6 +13,7 @@ export interface Group {
   memberCount?: number;
   lastActivity: string;
   unreadCount: number;
+  createdBy?: string; // user ID of the group creator
 }
 
 // ─── Event ──────────────────────────────────────────────
@@ -101,6 +102,7 @@ export interface GroupMemberResponse {
 export interface GroupResponse {
   id: string;
   name: string;
+  created_by: string;
   last_activity: string;
   member_count: number;
   member_ids: string[];
