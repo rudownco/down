@@ -5,7 +5,7 @@ import { Plus, X } from 'lucide-react';
 import { GroupCard } from '@/components/GroupCard';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
-import { fetchGroups, createGroup } from '@down/common';
+import { fetchGroups, createGroup, getNotifications } from '@down/common';
 import type { DownGroup } from '@down/common';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -20,7 +20,15 @@ export default function GroupsPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetchGroups(supabase).then(setGroups).catch(() => {});
+    Promise.all([fetchGroups(supabase), getNotifications(supabase)])
+      .then(([fetchedGroups, notifs]) => {
+        const unreadByGroup: Record<string, number> = {};
+        for (const n of notifs) {
+          if (!n.read) unreadByGroup[n.groupId] = (unreadByGroup[n.groupId] ?? 0) + 1;
+        }
+        setGroups(fetchedGroups.map((g) => ({ ...g, unreadCount: unreadByGroup[g.id] ?? 0 })));
+      })
+      .catch(() => {});
   }, [user]);
 
   useEffect(() => {

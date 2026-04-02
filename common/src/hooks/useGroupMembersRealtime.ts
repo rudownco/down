@@ -44,11 +44,10 @@ export function useGroupMembersRealtime(
             const userId = (payload.old as { user_id?: string })?.user_id;
             if (userId) onEventRef.current({ type: 'removed', userId });
           }
-          // INSERT: placeholder for future live member-join updates
-          // if (payload.eventType === 'INSERT') {
-          //   const userId = (payload.new as { user_id?: string })?.user_id;
-          //   if (userId) onEventRef.current({ type: 'added', userId });
-          // }
+          if (payload.eventType === 'INSERT') {
+            const userId = (payload.new as { user_id?: string })?.user_id;
+            if (userId) onEventRef.current({ type: 'added', userId });
+          }
         }
       )
       .subscribe();
