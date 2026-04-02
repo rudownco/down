@@ -24,9 +24,13 @@ Provide structured, lightweight coordination using:
 Users can create and participate in multiple groups.
 
 #### Roles
-- **Creator** — Full control over group, can invite/remove users, can modify group settings
-- **Admin** — Can invite/remove users, cannot modify group settings or override creator
-- **Invitee** — Can participate in events, can suggest events and times, no administrative permissions
+
+**Note** - Permissions will be a hierarchy. A role will "inherit" the permissions of the roles below it.
+
+- **Owner** — Full control over group, can invite/remove users, can modify group settings
+- **Admin** — Invite/Remove Members, create/edit Events, promote Initiate -> Member
+- **Member** - Suggest Times on Events
+- **Initiate** — Can view events, vote on times, and RSVP
 
 ---
 
