@@ -2,13 +2,15 @@
 // "The Social Sketchbook" aesthetic
 
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text, ScrollView, Pressable } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
 import { getGreeting } from "../../../src/utils/greeting";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
+import { useNotificationStore } from "../../../src/stores/notificationStore";
 
 const FILTERS = [
   { label: "🔥 active now", key: "active" },
@@ -23,6 +25,7 @@ export default function EventHubScreen() {
 
   const { groups, loadGroups } = useGroupStore();
   const { events, loadEvents } = useEventStore();
+  const { unreadCount } = useNotificationStore();
 
   const firstName = user?.name.split(" ")[0] ?? "";
 
@@ -45,9 +48,23 @@ export default function EventHubScreen() {
             down
           </Text>
         </View>
-        {user && (
-          <AvatarCircle user={user} size="md" tilt={0} />
-        )}
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => router.push('/(app)/notifications')}
+            className="relative"
+            hitSlop={8}
+          >
+            <Ionicons name="notifications-outline" size={24} color="#3F6377" />
+            {unreadCount > 0 && (
+              <View className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary items-center justify-center">
+                <Text className="text-on-primary text-[9px] font-bold leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+          {user && <AvatarCircle user={user} size="md" tilt={0} />}
+        </View>
       </View>
 
       <ScrollView

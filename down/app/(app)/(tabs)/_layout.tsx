@@ -2,7 +2,12 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text, Pressable } from "react-native";
+import { useEffect } from "react";
 import { cn } from "../../../lib/utils";
+import { useAuth } from "../../../src/context/AuthContext";
+import { supabase } from "../../../src/services/supabase";
+import { useNotificationsRealtime } from "@down/common";
+import { useNotificationStore } from "../../../src/stores/notificationStore";
 
 function TabBarIcon({
   name,
@@ -22,6 +27,18 @@ function TabBarIcon({
 }
 
 export default function TabsLayout() {
+  const { user } = useAuth();
+  const { unreadCount, loadUnread, incrementGroup } = useNotificationStore();
+
+  useEffect(() => {
+    if (!user) return;
+    loadUnread();
+  }, [user?.id]);
+
+  useNotificationsRealtime(supabase, user?.id, (notif) => {
+    incrementGroup(notif.groupId);
+  });
+
   return (
     <Tabs
       screenOptions={{
@@ -66,6 +83,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => (
             <TabBarIcon name={focused ? "people" : "people-outline"} focused={focused} />
           ),
+          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
       />
       <Tabs.Screen

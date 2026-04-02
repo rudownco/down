@@ -14,8 +14,10 @@ import {
   removeGroupMember as _removeGroupMember,
   updateMemberRole as _updateMemberRole,
   transferOwnership as _transferOwnership,
+  getNotifications as _getNotifications,
+  markNotificationAsRead as _markNotificationAsRead,
 } from '@down/common';
-import type { DownGroup, EventSuggestion, GroupRole, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
+import type { DownGroup, EventSuggestion, GroupRole, Notification, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
 
 export async function fetchGroups(): Promise<DownGroup[]> {
   return _fetchGroups(supabase);
@@ -55,4 +57,12 @@ export async function updateMemberRole(groupId: string, userId: string, newRole:
 
 export async function transferOwnership(groupId: string, newOwnerId: string): Promise<void> {
   return _transferOwnership(supabase, groupId, newOwnerId);
+}
+
+export async function getNotifications(): Promise<Notification[]> {
+  return _getNotifications(supabase);
+}
+
+export async function markNotificationAsRead(id: string): Promise<void> {
+  return _markNotificationAsRead(supabase, id);
 }

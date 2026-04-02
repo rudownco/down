@@ -15,6 +15,9 @@ import type {
   GroupResponse,
   GroupRole,
   InviteErrorCode,
+  Notification,
+  NotificationSettings,
+  NotificationType,
   RSVP,
   RSVPStatus,
 } from '../types';
@@ -174,6 +177,66 @@ export async function createInvite(
   });
   if (error) throw error;
   return data as CreateInviteResult;
+}
+
+// ─── Notifications ───────────────────────────────────────
+// Direct Supabase queries — RLS enforces user_id = auth.uid()
+
+export async function getNotifications(supabase: SupabaseClient): Promise<Notification[]> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) throw error;
+  return (data ?? []).map((n) => ({
+    id: n.id,
+    userId: n.user_id,
+    type: n.type as NotificationType,
+    groupId: n.group_id,
+    actorId: n.actor_id ?? null,
+    actorName: n.actor_name ?? null,
+    read: n.read,
+    createdAt: n.created_at,
+  }));
+}
+
+export async function markNotificationAsRead(
+  supabase: SupabaseClient,
+  id: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function getNotificationSettings(
+  supabase: SupabaseClient
+): Promise<NotificationSettings> {
+  const { data, error } = await supabase
+    .from('user_notification_settings')
+    .select('group_join_notifications')
+    .maybeSingle();
+  if (error) throw error;
+  // No row = defaults to enabled
+  return { groupJoinNotifications: data?.group_join_notifications ?? true };
+}
+
+// userId passed in — avoids an extra supabase.auth.getUser() network call
+export async function updateNotificationSettings(
+  supabase: SupabaseClient,
+  userId: string,
+  settings: Partial<NotificationSettings>
+): Promise<void> {
+  const { error } = await supabase
+    .from('user_notification_settings')
+    .upsert(
+      { user_id: userId, group_join_notifications: settings.groupJoinNotifications ?? true },
+      { onConflict: 'user_id' }
+    );
+  if (error) throw error;
 }
 
 export async function acceptInvite(

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Plus, Link2, Check, Copy, X, ChevronRight } from 'lucide-react';
 import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel, hasPermission, getRoleLabel, getAssignableRoles, canManageRole, getRoleRank } from '@down/common';
 import { fetchGroups, fetchEvents, createInvite, removeGroupMember, updateMemberRole, transferOwnership, useGroupMembersRealtime } from '@down/common';
@@ -13,6 +13,7 @@ import { useAuth } from '@/components/AuthProvider';
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const router = useRouter();
   const [group, setGroup] = useState<DownGroup | null>(null);
   const [events, setEvents] = useState<EventSuggestion[]>([]);
   const [notFound, setNotFound] = useState(false);
@@ -46,6 +47,11 @@ export default function GroupDetailPage() {
 
   useGroupMembersRealtime(supabase, id, (event) => {
     if (event.type === 'removed') {
+      if (event.userId === user?.id) {
+        // Current user was removed — redirect away
+        router.replace('/groups');
+        return;
+      }
       setGroup((prev) => {
         if (!prev) return prev;
         const memberExists = prev.members.some((m) => m.id === event.userId);
@@ -56,6 +62,15 @@ export default function GroupDetailPage() {
           memberCount: Math.max(0, (prev.memberCount ?? prev.members.length) - 1),
         };
       });
+    }
+    if (event.type === 'added') {
+      // Re-fetch to get the new member's full profile
+      fetchGroups(supabase)
+        .then((groups) => {
+          const updated = groups.find((g) => g.id === id);
+          if (updated) setGroup(updated);
+        })
+        .catch(() => {});
     }
   });
 
