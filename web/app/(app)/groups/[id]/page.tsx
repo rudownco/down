@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Plus, Link2, Check, Copy, X } from 'lucide-react';
 import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel } from '@down/common';
 import { fetchGroups, fetchEvents, createInvite, removeGroupMember, useGroupMembersRealtime } from '@down/common';
@@ -13,6 +13,7 @@ import { useAuth } from '@/components/AuthProvider';
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const router = useRouter();
   const [group, setGroup] = useState<DownGroup | null>(null);
   const [events, setEvents] = useState<EventSuggestion[]>([]);
   const [notFound, setNotFound] = useState(false);
@@ -43,6 +44,11 @@ export default function GroupDetailPage() {
   // Sync member changes from other clients in real-time
   useGroupMembersRealtime(supabase, id, (event) => {
     if (event.type === 'removed') {
+      if (event.userId === user?.id) {
+        // Current user was removed — redirect away
+        router.replace('/groups');
+        return;
+      }
       setGroup((prev) =>
         prev
           ? {
@@ -52,6 +58,15 @@ export default function GroupDetailPage() {
             }
           : prev
       );
+    }
+    if (event.type === 'added') {
+      // Re-fetch to get the new member's full profile
+      fetchGroups(supabase)
+        .then((groups) => {
+          const updated = groups.find((g) => g.id === id);
+          if (updated) setGroup(updated);
+        })
+        .catch(() => {});
     }
   });
 
@@ -150,7 +165,7 @@ export default function GroupDetailPage() {
         <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide mb-3">
           Members
         </h2>
-        <div className="flex items-center gap-3 overflow-x-auto pb-1">
+        <div className="flex items-center gap-3 overflow-x-auto pb-1 pt-1">
           {group.members.map((member) => {
             const isCurrentUser = member.id === user?.id;
             const canRemove = isCreator && !isCurrentUser;

@@ -66,6 +66,59 @@ Deno.serve(async (req: Request) => {
 
     console.log("[accept-invite] user", user.id, "joined group", invite.group_id)
 
+    // Fan-out: notify existing group members
+    console.log("[accept-invite] fanning out join notifications...")
+    const { data: members } = await supabase
+      .from("group_users")
+      .select("user_id")
+      .eq("group_id", invite.group_id)
+      .neq("user_id", user.id)
+
+    if (members && members.length > 0) {
+      const memberIds = members.map((m: { user_id: string }) => m.user_id)
+
+      // Fetch actor's display name for notification text
+      const { data: actorProfile } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .maybeSingle()
+      const actorName: string | null = actorProfile?.name ?? null
+      console.log("[accept-invite] actor name:", actorName)
+
+      // Fetch users who have explicitly disabled group join notifications
+      const { data: settings } = await supabase
+        .from("user_notification_settings")
+        .select("user_id, group_join_notifications")
+        .in("user_id", memberIds)
+
+      const disabledIds = new Set(
+        (settings ?? [])
+          .filter((s: { user_id: string; group_join_notifications: boolean }) => !s.group_join_notifications)
+          .map((s: { user_id: string }) => s.user_id)
+      )
+
+      const recipients = memberIds.filter((id: string) => !disabledIds.has(id))
+
+      if (recipients.length > 0) {
+        const { error: notifErr } = await supabase.from("notifications").insert(
+          recipients.map((recipientId: string) => ({
+            user_id: recipientId,
+            type: "group_member_joined",
+            group_id: invite.group_id,
+            actor_id: user.id,
+            actor_name: actorName,
+          }))
+        )
+        if (notifErr) {
+          // Non-fatal: log but don't fail the join
+          console.error("[accept-invite] notification insert error:", JSON.stringify(notifErr))
+        } else {
+          console.log("[accept-invite] notified", recipients.length, "members")
+        }
+      }
+    }
+
     return ok({
       ok: true,
       group_id: invite.group_id,

@@ -12,6 +12,7 @@ interface GroupState {
 
   loadGroups: () => Promise<void>;
   addGroup: (group: DownGroup) => void;
+  removeGroup: (groupId: string) => void;
   removeMember: (groupId: string, userId: string) => void;
 }
 
@@ -32,6 +33,10 @@ export const useGroupStore = create<GroupState>((set) => ({
 
   addGroup: (group) => {
     set((state) => ({ groups: [group, ...state.groups] }));
+  },
+
+  removeGroup: (groupId) => {
+    set((state) => ({ groups: state.groups.filter((g) => g.id !== groupId) }));
   },
 
   // Optimistically remove a member from local state after API call succeeds

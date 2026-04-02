@@ -12,8 +12,10 @@ import {
   submitRSVP as _submitRSVP,
   createInvite as _createInvite,
   removeGroupMember as _removeGroupMember,
+  getNotifications as _getNotifications,
+  markNotificationAsRead as _markNotificationAsRead,
 } from '@down/common';
-import type { DownGroup, EventSuggestion, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
+import type { DownGroup, EventSuggestion, Notification, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
 
 export async function fetchGroups(): Promise<DownGroup[]> {
   return _fetchGroups(supabase);
@@ -45,4 +47,12 @@ export async function submitRSVP(eventId: string, status: RSVPStatus, userId: st
 
 export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
   return _removeGroupMember(supabase, groupId, userId);
+}
+
+export async function getNotifications(): Promise<Notification[]> {
+  return _getNotifications(supabase);
+}
+
+export async function markNotificationAsRead(id: string): Promise<void> {
+  return _markNotificationAsRead(supabase, id);
 }

@@ -111,3 +111,21 @@ export interface GroupResponse {
 
 // ─── Convenience alias used throughout the apps ─────────
 export type DownGroup = Group;
+
+// ─── Notifications ────────────────────────────────────────
+export type NotificationType = 'group_member_joined';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  groupId: string;
+  actorId: string | null;
+  actorName: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface NotificationSettings {
+  groupJoinNotifications: boolean;
+}
