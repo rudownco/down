@@ -41,6 +41,7 @@ export function useNotificationsRealtime(
             type: (n as any).type as NotificationType,
             groupId: (n as any).group_id as string,
             actorId: ((n as any).actor_id as string | null) ?? null,
+            actorName: ((n as any).actor_name as string | null) ?? null,
             read: (n as any).read as boolean,
             createdAt: (n as any).created_at as string,
           });
