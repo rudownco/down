@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
       {
         group_id: invite.group_id,
         user_id: user.id,
-        role: "invitee",
+        role: "initiate",
         joined_at: new Date().toISOString(),
       },
       { onConflict: "group_id,user_id" }

@@ -14,6 +14,8 @@ export * from './utils/emoji';
 export * from './utils/event';
 export * from './utils/greeting';
 export * from './utils/user';
+export { hasPermission, canManageRole, getPermissions, getRoleRank, getRoleLabel, getAssignableRoles } from './utils/permissions';
+export type { Permission } from './utils/permissions';
 
 // Hooks
 export * from './hooks';

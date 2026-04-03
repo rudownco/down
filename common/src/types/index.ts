@@ -1,3 +1,6 @@
+import type { GroupRole } from '../utils/permissions';
+export type { GroupRole } from '../utils/permissions';
+
 // ─── User ───────────────────────────────────────────────
 export interface User {
   id: string;
@@ -5,15 +8,19 @@ export interface User {
   avatarUrl?: string;
 }
 
+export interface GroupMember extends User {
+  role: GroupRole;
+}
+
 // ─── Group ──────────────────────────────────────────────
 export interface Group {
   id: string;
   name: string;
-  members: User[];
+  members: GroupMember[];
   memberCount?: number;
   lastActivity: string;
   unreadCount: number;
-  createdBy?: string; // user ID of the group creator
+  createdBy?: string; // historical — use member roles for permission checks
 }
 
 // ─── Event ──────────────────────────────────────────────
@@ -97,6 +104,7 @@ export interface GroupMemberResponse {
   id: string;
   name: string;
   avatar_url: string | null;
+  role: GroupRole;
 }
 
 export interface GroupResponse {

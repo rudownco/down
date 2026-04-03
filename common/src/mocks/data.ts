@@ -1,4 +1,4 @@
-import type { DownGroup, EventSuggestion, RSVP, User, VotingOption } from '../types';
+import type { DownGroup, EventSuggestion, GroupMember, RSVP, User, VotingOption } from '../types';
 
 // ─── Mock Users ─────────────────────────────────────────
 export const MockUsers = {
@@ -13,6 +13,10 @@ export const MockUsers = {
 
 export const currentUser = MockUsers.alex;
 export const allUsers    = Object.values(MockUsers);
+
+function mockMembers(users: User[]): GroupMember[] {
+  return users.map((u, i) => ({ ...u, role: i === 0 ? 'owner' as const : 'member' as const }));
+}
 
 // ─── Mock Voting Options ────────────────────────────────
 const pizzaOptions: VotingOption[] = [
@@ -98,7 +102,7 @@ export const MockGroups = {
   fridaySquad: {
     id: 'g1',
     name: 'Friday Squad',
-    members: allUsers.slice(0, 5),
+    members: mockMembers(allUsers.slice(0, 5)),
     lastActivity: '2h ago',
     unreadCount: 3,
   } as DownGroup,
@@ -106,7 +110,7 @@ export const MockGroups = {
   workBuds: {
     id: 'g2',
     name: 'Work Buds',
-    members: allUsers.slice(0, 4),
+    members: mockMembers(allUsers.slice(0, 4)),
     lastActivity: '1d ago',
     unreadCount: 0,
   } as DownGroup,
@@ -114,7 +118,7 @@ export const MockGroups = {
   weekendWarriors: {
     id: 'g3',
     name: 'Weekend Warriors',
-    members: allUsers,
+    members: mockMembers(allUsers),
     lastActivity: '5m ago',
     unreadCount: 7,
   } as DownGroup,
@@ -122,7 +126,7 @@ export const MockGroups = {
   coffeeClub: {
     id: 'g4',
     name: 'Coffee Club',
-    members: [MockUsers.alex, MockUsers.casey, MockUsers.river],
+    members: mockMembers([MockUsers.alex, MockUsers.casey, MockUsers.river]),
     lastActivity: '3d ago',
     unreadCount: 0,
   } as DownGroup,
