@@ -103,7 +103,7 @@ class MockApi {
     return {
       id: `g-${Date.now()}`,
       name,
-      members: [currentUser],
+      members: [{ ...currentUser, role: 'owner' as const }],
       lastActivity: 'just now',
       unreadCount: 0,
     };

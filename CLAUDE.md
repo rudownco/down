@@ -27,7 +27,7 @@ Users can create and participate in multiple groups.
 
 **Note** - Permissions will be a hierarchy. A role will "inherit" the permissions of the roles below it.
 
-- **Owner** — Full control over group, can invite/remove users, can modify group settings
+- **Owner** — Manage the group settings (include Transferring ownership to someone else, by default Owner role be the initial creator of group), promote Member -> Admin
 - **Admin** — Invite/Remove Members, create/edit Events, promote Initiate -> Member
 - **Member** - Suggest Times on Events
 - **Initiate** — Can view events, vote on times, and RSVP

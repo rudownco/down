@@ -12,8 +12,10 @@ import {
   submitRSVP as _submitRSVP,
   createInvite as _createInvite,
   removeGroupMember as _removeGroupMember,
+  updateMemberRole as _updateMemberRole,
+  transferOwnership as _transferOwnership,
 } from '@down/common';
-import type { DownGroup, EventSuggestion, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
+import type { DownGroup, EventSuggestion, GroupRole, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
 
 export async function fetchGroups(): Promise<DownGroup[]> {
   return _fetchGroups(supabase);
@@ -45,4 +47,12 @@ export async function submitRSVP(eventId: string, status: RSVPStatus, userId: st
 
 export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
   return _removeGroupMember(supabase, groupId, userId);
+}
+
+export async function updateMemberRole(groupId: string, userId: string, newRole: GroupRole): Promise<void> {
+  return _updateMemberRole(supabase, groupId, userId, newRole);
+}
+
+export async function transferOwnership(groupId: string, newOwnerId: string): Promise<void> {
+  return _transferOwnership(supabase, groupId, newOwnerId);
 }

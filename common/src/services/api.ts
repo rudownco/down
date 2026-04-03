@@ -10,17 +10,18 @@ import type {
   CreateInviteResult,
   DownGroup,
   EventSuggestion,
+  GroupMember,
   GroupMemberResponse,
   GroupResponse,
+  GroupRole,
   InviteErrorCode,
   RSVP,
   RSVPStatus,
-  User,
 } from '../types';
 import { relativeFormatted } from '../utils/dateFormatting';
 
-function mapMember(m: GroupMemberResponse): User {
-  return { id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined };
+function mapMember(m: GroupMemberResponse): GroupMember {
+  return { id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined, role: m.role };
 }
 
 // ─── Groups ─────────────────────────────────────────────
@@ -134,6 +135,31 @@ export async function removeGroupMember(
   });
   // Treat "not a member" as success — idempotent, concurrent deletes are fine
   if (error && !error?.message?.includes('not a member')) throw error;
+}
+
+export async function updateMemberRole(
+  supabase: SupabaseClient,
+  groupId: string,
+  userId: string,
+  newRole: GroupRole
+): Promise<void> {
+  const { error } = await supabase.functions.invoke('update-member-role', {
+    method: 'POST',
+    body: { group_id: groupId, user_id: userId, new_role: newRole },
+  });
+  if (error) throw error;
+}
+
+export async function transferOwnership(
+  supabase: SupabaseClient,
+  groupId: string,
+  newOwnerId: string
+): Promise<void> {
+  const { error } = await supabase.functions.invoke('transfer-ownership', {
+    method: 'POST',
+    body: { group_id: groupId, new_owner_id: newOwnerId },
+  });
+  if (error) throw error;
 }
 
 // ─── Invites ─────────────────────────────────────────────

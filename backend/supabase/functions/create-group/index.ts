@@ -32,10 +32,10 @@ Deno.serve(async (req: Request) => {
 
     console.log("[create-group] group created:", group.id)
 
-    // Add the creator as the first member
+    // Add the creator as the first member (owner role)
     const { error: memberError } = await supabase
       .from("group_users")
-      .insert({ group_id: group.id, user_id: user.id })
+      .insert({ group_id: group.id, user_id: user.id, role: "owner" })
 
     if (memberError) {
       console.error("[create-group] insert member error:", JSON.stringify(memberError))
