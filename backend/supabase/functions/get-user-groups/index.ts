@@ -25,31 +25,29 @@ Deno.serve(async (req: Request) => {
       .from("groups")
       .select(`
         id, name, created_by, last_activity, created_at,
-        group_users ( user_id )
+        group_users ( user_id, role )
       `)
       .in("id", groupIds)
       .order("last_activity", { ascending: false })
 
     if (error) throw error
 
-    // Collect unique user IDs across all groups and fetch profiles
+    // Collect unique user IDs and fetch all profiles in one query
     const allUserIds = [...new Set(
       groups.flatMap((g: any) => g.group_users.map((gu: any) => gu.user_id))
     )]
 
+    const { data: profiles, error: profileErr } = await supabase
+      .from("profiles")
+      .select("id, name, avatar_url")
+      .in("id", allUserIds)
+
+    if (profileErr) throw profileErr
+
     const profileMap: Record<string, { id: string; name: string; avatar_url: string | null }> = {}
-    await Promise.all(
-      allUserIds.map(async (uid: string) => {
-        const { data: { user: u } } = await supabase.auth.admin.getUserById(uid)
-        if (u) {
-          profileMap[u.id] = {
-            id: u.id,
-            name: u.user_metadata?.full_name || u.email || "Unknown",
-            avatar_url: u.user_metadata?.avatar_url || null,
-          }
-        }
-      })
-    )
+    for (const p of profiles ?? []) {
+      profileMap[p.id] = p
+    }
 
     console.log("[get-user-groups] found", groups.length, "groups,", allUserIds.length, "members")
 
@@ -61,7 +59,12 @@ Deno.serve(async (req: Request) => {
       created_at:    group.created_at,
       member_ids:    group.group_users.map((gu: any) => gu.user_id),
       member_count:  group.group_users.length,
-      members:       group.group_users.map((gu: any) => profileMap[gu.user_id]).filter(Boolean),
+      members:       group.group_users
+        .map((gu: any) => {
+          const profile = profileMap[gu.user_id]
+          return profile ? { ...profile, role: gu.role ?? "member" } : null
+        })
+        .filter(Boolean),
     }))
 
     return ok(payload)

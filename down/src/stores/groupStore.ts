@@ -2,7 +2,7 @@
 // Translated from GroupDashboardViewModel
 
 import { create } from 'zustand';
-import { DownGroup } from '../types';
+import type { DownGroup, GroupRole } from '@down/common';
 import * as api from '../services/api';
 
 interface GroupState {
@@ -13,6 +13,7 @@ interface GroupState {
   loadGroups: () => Promise<void>;
   addGroup: (group: DownGroup) => void;
   removeMember: (groupId: string, userId: string) => void;
+  updateMemberRole: (groupId: string, userId: string, newRole: GroupRole) => void;
 }
 
 export const useGroupStore = create<GroupState>((set) => ({
@@ -45,6 +46,16 @@ export const useGroupStore = create<GroupState>((set) => ({
               members: g.members.filter((m) => m.id !== userId),
               memberCount: Math.max(0, (g.memberCount ?? g.members.length) - 1),
             }
+      ),
+    }));
+  },
+
+  updateMemberRole: (groupId, userId, newRole) => {
+    set((state) => ({
+      groups: state.groups.map((g) =>
+        g.id !== groupId
+          ? g
+          : { ...g, members: g.members.map((m) => m.id === userId ? { ...m, role: newRole } : m) }
       ),
     }));
   },
