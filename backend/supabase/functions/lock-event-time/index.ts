@@ -1,9 +1,9 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
 
-// POST /functions/v1/submit-votes
-// Body: { event_id, option_ids: string[] }
-// Records the calling user's votes on event time options. Requires event.vote permission (initiate+).
-// Replaces any previous votes this user cast on this event.
+// POST /functions/v1/lock-event-time
+// Body: { event_id, time_option_id: string | null }
+// Selects the winning time option and advances the event from 'voting' to 'rsvp'.
+// Requires event.lock_time permission (admin+).
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -11,15 +11,14 @@ Deno.serve(async (req: Request) => {
 
   try {
     const user = await getUser(req)
-    console.log("[submit-votes] user:", user.id)
+    console.log("[lock-event-time] user:", user.id)
     const supabase = createServiceClient()
 
-    const { event_id, option_ids } = await req.json()
+    const { event_id, time_option_id } = await req.json()
     if (!event_id?.trim()) return err("event_id is required", 400)
-    if (!Array.isArray(option_ids) || option_ids.length === 0) return err("option_ids must be a non-empty array", 400)
 
-    // Fetch the event to get group_id + status
-    console.log("[submit-votes] fetching event:", event_id)
+    // Fetch event to get group_id + status
+    console.log("[lock-event-time] fetching event:", event_id)
     const { data: event, error: eventError } = await supabase
       .from("events")
       .select("id, group_id, status")
@@ -27,16 +26,16 @@ Deno.serve(async (req: Request) => {
       .single()
 
     if (eventError || !event) {
-      console.error("[submit-votes] event not found:", eventError)
+      console.error("[lock-event-time] event not found:", eventError)
       return err("Event not found", 404)
     }
 
     if (event.status !== "voting") {
-      return err("Voting is closed for this event", 400)
+      return err("Event is not in voting phase", 400)
     }
 
-    // Check caller has event.vote permission (initiate+, i.e., any group member)
-    console.log("[submit-votes] checking membership for group:", event.group_id)
+    // Check caller is admin+
+    console.log("[lock-event-time] checking membership for group:", event.group_id)
     const { data: membership, error: memberError } = await supabase
       .from("group_users")
       .select("role")
@@ -45,69 +44,51 @@ Deno.serve(async (req: Request) => {
       .single()
 
     if (memberError || !membership) {
-      console.error("[submit-votes] membership check error:", memberError)
+      console.error("[lock-event-time] membership check error:", memberError)
       return err("Not a member of this group", 403)
     }
 
-    // Verify all option_ids belong to this event
-    console.log("[submit-votes] verifying options belong to event")
-    const { data: validOptions, error: optError } = await supabase
-      .from("event_time_options")
-      .select("id")
-      .eq("event_id", event_id)
-      .in("id", option_ids)
-
-    if (optError) {
-      console.error("[submit-votes] option verification error:", optError)
-      throw new Error(optError.message)
+    if (!["owner", "admin"].includes(membership.role)) {
+      return err("Only admins and owners can lock the event time", 403)
     }
 
-    if (!validOptions || validOptions.length !== option_ids.length) {
-      return err("One or more option_ids do not belong to this event", 400)
-    }
+    // If a time_option_id was provided, verify it belongs to this event
+    if (time_option_id) {
+      console.log("[lock-event-time] verifying time option belongs to event")
+      const { data: option, error: optError } = await supabase
+        .from("event_time_options")
+        .select("id")
+        .eq("id", time_option_id)
+        .eq("event_id", event_id)
+        .single()
 
-    // Delete the user's existing votes for this event's options
-    console.log("[submit-votes] clearing old votes for user:", user.id)
-    const { data: allOptions } = await supabase
-      .from("event_time_options")
-      .select("id")
-      .eq("event_id", event_id)
-
-    const allOptionIds = (allOptions ?? []).map((o: any) => o.id)
-
-    if (allOptionIds.length > 0) {
-      const { error: deleteError } = await supabase
-        .from("event_time_votes")
-        .delete()
-        .eq("user_id", user.id)
-        .in("event_time_option_id", allOptionIds)
-
-      if (deleteError) {
-        console.error("[submit-votes] delete old votes error:", deleteError)
-        throw new Error(deleteError.message)
+      if (optError || !option) {
+        console.error("[lock-event-time] time option not found:", optError)
+        return err("Time option not found for this event", 404)
       }
     }
 
-    // Insert new votes
-    console.log("[submit-votes] inserting", option_ids.length, "votes")
-    const { error: insertError } = await supabase.from("event_time_votes").insert(
-      option_ids.map((optId: string) => ({
-        event_time_option_id: optId,
-        user_id: user.id,
-      }))
-    )
+    // Transition event to confirmed
+    console.log("[lock-event-time] confirming event, confirmed option:", time_option_id ?? "none")
+    const { error: updateError } = await supabase
+      .from("events")
+      .update({
+        status: "confirmed",
+        confirmed_time_option_id: time_option_id ?? null,
+      })
+      .eq("id", event_id)
 
-    if (insertError) {
-      console.error("[submit-votes] insert error:", JSON.stringify(insertError))
-      throw new Error(insertError.message)
+    if (updateError) {
+      console.error("[lock-event-time] update error:", JSON.stringify(updateError))
+      throw new Error(updateError.message)
     }
 
-    console.log("[submit-votes] fetching updated event")
+    console.log("[lock-event-time] fetching updated event")
     const full = await fetchFullEvent(supabase, event_id)
-    console.log("[submit-votes] done")
+    console.log("[lock-event-time] done")
     return ok(full)
   } catch (e) {
-    console.error("[submit-votes] error:", e)
+    console.error("[lock-event-time] error:", e)
     const message = e instanceof Error ? e.message : String(e)
     return err(message, message === "Unauthorized" ? 401 : 500)
   }

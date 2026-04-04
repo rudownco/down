@@ -13,7 +13,7 @@ Deno.serve(async (req: Request) => {
     console.log("[create-event] user:", user.id)
     const supabase = createServiceClient()
 
-    const { group_id, title, description, location, time_options } = await req.json()
+    const { group_id, title, description, location, time_options, voting_ends_at } = await req.json()
 
     if (!group_id?.trim()) return err("group_id is required", 400)
     if (!title?.trim()) return err("title is required", 400)
@@ -38,6 +38,13 @@ Deno.serve(async (req: Request) => {
 
     console.log("[create-event] creating event:", title.trim())
 
+    // Events only enter voting mode when there are time options AND a voting deadline.
+    // Without a deadline there's nothing to vote on — confirm immediately.
+    const hasTimeOptions = Array.isArray(time_options) && time_options.length > 0
+    const hasDeadline = !!voting_ends_at
+    const initialStatus = (hasTimeOptions && hasDeadline) ? "voting" : "confirmed"
+    console.log("[create-event] initial status:", initialStatus)
+
     // Create the event
     const { data: event, error: eventError } = await supabase
       .from("events")
@@ -46,8 +53,9 @@ Deno.serve(async (req: Request) => {
         title: title.trim(),
         description: description ?? null,
         location: location ?? null,
-        status: "voting",
+        status: initialStatus,
         created_by: user.id,
+        voting_ends_at: hasDeadline ? voting_ends_at : null,
       })
       .select()
       .single()
@@ -68,12 +76,28 @@ Deno.serve(async (req: Request) => {
         suggested_by: user.id,
       }))
 
-      const { error: optError } = await supabase.from("event_time_options").insert(rows)
+      const { data: insertedOptions, error: optError } = await supabase
+        .from("event_time_options")
+        .insert(rows)
+        .select("id")
       if (optError) {
         console.error("[create-event] insert time options error:", JSON.stringify(optError))
         throw new Error(optError.message)
       }
       console.log("[create-event] inserted", rows.length, "time options")
+
+      // If confirmed immediately, lock the first time option as the confirmed time
+      if (initialStatus === "confirmed" && insertedOptions?.[0]?.id) {
+        console.log("[create-event] setting confirmed_time_option_id:", insertedOptions[0].id)
+        const { error: confirmErr } = await supabase
+          .from("events")
+          .update({ confirmed_time_option_id: insertedOptions[0].id })
+          .eq("id", event.id)
+        if (confirmErr) {
+          console.error("[create-event] set confirmed_time_option_id error:", JSON.stringify(confirmErr))
+          throw new Error(confirmErr.message)
+        }
+      }
     }
 
     // Fetch full event to return
@@ -91,9 +115,9 @@ async function fetchFullEvent(supabase: ReturnType<typeof createServiceClient>, 
   const { data: event, error } = await supabase
     .from("events")
     .select(`
-      id, title, description, location, status, created_at,
+      id, title, description, location, status, voting_ends_at, confirmed_time_option_id, created_at,
       suggestedBy:profiles!events_created_by_fkey(id, name, avatar_url),
-      votingOptions:event_time_options(
+      votingOptions:event_time_options!event_time_options_event_id_fkey(
         id, date, time,
         votes:event_time_votes(count),
         voters:event_time_votes(user_id, profile:profiles!event_time_votes_user_id_fkey(id, name, avatar_url))
@@ -115,6 +139,8 @@ function mapEvent(e: any) {
     description: e.description ?? undefined,
     location: e.location ?? undefined,
     status: e.status,
+    votingEndsAt: e.voting_ends_at ?? undefined,
+    confirmedTimeOptionId: e.confirmed_time_option_id ?? undefined,
     suggestedBy: {
       id: e.suggestedBy.id,
       name: e.suggestedBy.name,

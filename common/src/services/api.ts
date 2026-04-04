@@ -120,6 +120,19 @@ export async function submitVotes(
   return data as EventSuggestion;
 }
 
+export async function lockEventTime(
+  supabase: SupabaseClient,
+  eventId: string,
+  timeOptionId: string | null
+): Promise<EventSuggestion> {
+  const { data, error } = await supabase.functions.invoke('lock-event-time', {
+    method: 'POST',
+    body: { event_id: eventId, time_option_id: timeOptionId },
+  });
+  if (error) throw error;
+  return data as EventSuggestion;
+}
+
 export async function submitRSVP(
   supabase: SupabaseClient,
   eventId: string,

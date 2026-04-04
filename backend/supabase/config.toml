@@ -48,6 +48,9 @@ verify_jwt = false
 [functions.submit-rsvp]
 verify_jwt = false
 
+[functions.lock-event-time]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

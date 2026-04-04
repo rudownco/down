@@ -33,6 +33,7 @@ export function CreateEventModal({ visible, groupId, onClose, onCreated }: Props
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [timeOptions, setTimeOptions] = useState<TimeOption[]>([{ date: "", time: "" }]);
+  const [votingHours, setVotingHours] = useState<number | null>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const canSubmit = title.trim().length > 0;
@@ -42,6 +43,7 @@ export function CreateEventModal({ visible, groupId, onClose, onCreated }: Props
     setLocation("");
     setDescription("");
     setTimeOptions([{ date: "", time: "" }]);
+    setVotingHours(1);
     setIsSubmitting(false);
     onClose();
   };
@@ -71,6 +73,9 @@ export function CreateEventModal({ visible, groupId, onClose, onCreated }: Props
         location: location.trim() || undefined,
         group_id: groupId,
         time_options: filledOptions.length > 0 ? filledOptions : undefined,
+        voting_ends_at: votingHours != null
+          ? new Date(Date.now() + votingHours * 60 * 60 * 1000).toISOString()
+          : undefined,
       });
       onCreated(created);
       handleClose();
@@ -149,12 +154,12 @@ export function CreateEventModal({ visible, groupId, onClose, onCreated }: Props
               {/* When */}
               <View className="gap-3">
                 <Text className="font-heading text-xl text-primary">
-                  when? (optional)
+                  {votingHours != null ? "time options" : "when's it happening?"}
                 </Text>
                 <SketchCard tilt={0.6} variant="default" className="gap-3">
                   {timeOptions.map((opt, index) => (
                     <View key={index} className="gap-2">
-                      {timeOptions.length > 1 && (
+                      {votingHours != null && timeOptions.length > 1 && (
                         <View className="flex-row items-center justify-between">
                           <SectionLabel text={`option ${index + 1}`} />
                           <Pressable onPress={() => removeTimeOption(index)} className="p-1">
@@ -177,21 +182,89 @@ export function CreateEventModal({ visible, groupId, onClose, onCreated }: Props
                       />
                     </View>
                   ))}
-                  <Pressable
-                    onPress={addTimeOption}
-                    className="flex-row items-center gap-2 pt-1"
-                  >
-                    <View className="w-7 h-7 rounded-full bg-primary-container items-center justify-center">
-                      <Ionicons name="add" size={14} color="#3F6377" />
-                    </View>
-                    <Text className="font-body-medium text-xs text-on-surface-variant">
-                      suggest another time
-                    </Text>
-                  </Pressable>
+                  {votingHours != null && (
+                    <Pressable
+                      onPress={addTimeOption}
+                      className="flex-row items-center gap-2 pt-1"
+                    >
+                      <View className="w-7 h-7 rounded-full bg-primary-container items-center justify-center">
+                        <Ionicons name="add" size={14} color="#3F6377" />
+                      </View>
+                      <Text className="font-body-medium text-xs text-on-surface-variant">
+                        add another option
+                      </Text>
+                    </Pressable>
+                  )}
                 </SketchCard>
                 <Text className="font-label text-[10px] text-tertiary uppercase tracking-widest px-1">
                   heads up: no flaking allowed!
                 </Text>
+              </View>
+
+              {/* Voting deadline */}
+              <View className="gap-3">
+                <View className="flex-row items-center justify-between">
+                  <Text className="font-heading text-xl text-primary">
+                    voting deadline
+                  </Text>
+                  <Pressable
+                    onPress={() => setVotingHours(v => v == null ? 1 : null)}
+                    className={`px-3 py-1 rounded-chip ${votingHours != null ? 'bg-primary' : 'bg-surface-container'}`}
+                  >
+                    <Text className={`font-heading text-xs ${votingHours != null ? 'text-on-primary' : 'text-on-surface-variant'}`}>
+                      {votingHours != null ? '⏱ On' : 'Off'}
+                    </Text>
+                  </Pressable>
+                </View>
+                {votingHours == null && (
+                  <View
+                    style={{ backgroundColor: '#FFEFC7', borderLeftWidth: 3, borderLeftColor: '#D17D04' }}
+                    className="rounded-r-xl px-4 py-3 gap-1"
+                  >
+                    <Text style={{ color: '#D17D04' }} className="font-heading text-xs uppercase tracking-widest">
+                      ⚠️ heads up
+                    </Text>
+                    <Text style={{ color: '#A85E00' }} className="font-body text-sm leading-snug">
+                      skipping the vote locks in whatever time you set — squad just shows up or doesn't
+                    </Text>
+                  </View>
+                )}
+                {votingHours != null && (
+                  <SketchCard tilt={0} variant="default" className="items-center gap-4 py-5">
+                    <View className="flex-row items-baseline gap-1">
+                      <Text className="font-heading-extrabold text-5xl text-primary">
+                        {votingHours}
+                      </Text>
+                      <Text className="font-heading text-xl text-on-surface-variant">
+                        {votingHours === 1 ? 'hr' : 'hrs'}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center gap-6">
+                      <Pressable
+                        onPress={() => setVotingHours(h => Math.max(1, (h ?? 8) - 1))}
+                        className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+                      >
+                        <Ionicons name="remove" size={22} color="#3F6377" />
+                      </Pressable>
+                      <View className="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                        <View
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${((votingHours - 1) / 23) * 100}%` }}
+                        />
+                      </View>
+                      <Pressable
+                        onPress={() => setVotingHours(h => Math.min(24, (h ?? 8) + 1))}
+                        className="w-12 h-12 rounded-full bg-surface-container-high items-center justify-center"
+                      >
+                        <Ionicons name="add" size={22} color="#3F6377" />
+                      </Pressable>
+                    </View>
+                    <View className="flex-row justify-between w-full px-1">
+                      <Text className="font-label text-[10px] text-outline uppercase tracking-widest">1h</Text>
+                      <Text className="font-label text-[10px] text-outline uppercase tracking-widest">24h</Text>
+                    </View>
+                  </SketchCard>
+                )}
               </View>
 
               {/* Any deets */}

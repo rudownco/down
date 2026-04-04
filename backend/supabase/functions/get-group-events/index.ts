@@ -3,6 +3,8 @@ import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/a
 // POST /functions/v1/get-group-events
 // Body: { group_id }
 // Returns all events for a group with time options, votes, and RSVPs. Requires group membership.
+// Side effect: lazily auto-transitions any 'voting' event whose voting_ends_at has passed,
+// picking the time option with the most votes as the confirmed time.
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -35,9 +37,9 @@ Deno.serve(async (req: Request) => {
     const { data: events, error: eventsError } = await supabase
       .from("events")
       .select(`
-        id, title, description, location, status, created_at,
+        id, title, description, location, status, voting_ends_at, confirmed_time_option_id, created_at,
         suggestedBy:profiles!events_created_by_fkey(id, name, avatar_url),
-        votingOptions:event_time_options(
+        votingOptions:event_time_options!event_time_options_event_id_fkey(
           id, date, time,
           votes:event_time_votes(count),
           voters:event_time_votes(user_id, profile:profiles!event_time_votes_user_id_fkey(id, name, avatar_url))
@@ -54,6 +56,30 @@ Deno.serve(async (req: Request) => {
 
     console.log("[get-group-events] found", events?.length ?? 0, "events")
 
+    // Lazily auto-transition any voting events whose deadline has passed
+    const now = new Date()
+    const expired = (events ?? []).filter(
+      (e: any) => e.status === "voting" && e.voting_ends_at && new Date(e.voting_ends_at) < now
+    )
+
+    if (expired.length > 0) {
+      console.log("[get-group-events] auto-transitioning", expired.length, "expired voting events")
+      await Promise.all(expired.map(async (e: any) => {
+        const winningOptionId = pickWinner(e.votingOptions ?? [])
+        console.log("[get-group-events] transitioning event", e.id, "winner:", winningOptionId ?? "none")
+        const { error: updateError } = await supabase
+          .from("events")
+          .update({ status: "confirmed", confirmed_time_option_id: winningOptionId ?? null })
+          .eq("id", e.id)
+        if (updateError) {
+          console.error("[get-group-events] auto-transition error for event", e.id, updateError)
+        } else {
+          e.status = "confirmed"
+          e.confirmed_time_option_id = winningOptionId ?? null
+        }
+      }))
+    }
+
     return ok((events ?? []).map(mapEvent))
   } catch (e) {
     console.error("[get-group-events] error:", e)
@@ -62,6 +88,17 @@ Deno.serve(async (req: Request) => {
   }
 })
 
+/** Returns the id of the time option with the most votes, or null if there are none. */
+function pickWinner(votingOptions: any[]): string | null {
+  if (!votingOptions?.length) return null
+  const sorted = [...votingOptions].sort((a, b) => {
+    const aVotes = a.votes?.[0]?.count ?? 0
+    const bVotes = b.votes?.[0]?.count ?? 0
+    return bVotes - aVotes
+  })
+  return sorted[0]?.id ?? null
+}
+
 function mapEvent(e: any) {
   return {
     id: e.id,
@@ -69,6 +106,8 @@ function mapEvent(e: any) {
     description: e.description ?? undefined,
     location: e.location ?? undefined,
     status: e.status,
+    votingEndsAt: e.voting_ends_at ?? undefined,
+    confirmedTimeOptionId: e.confirmed_time_option_id ?? undefined,
     suggestedBy: {
       id: e.suggestedBy.id,
       name: e.suggestedBy.name,

@@ -9,7 +9,7 @@ import { useAuth } from "../../../../src/context/AuthContext";
 import { useGroupStore } from "../../../../src/stores/groupStore";
 import { useEventStore } from "../../../../src/stores/eventStore";
 import * as api from "../../../../src/services/api";
-import { hasPermission } from "@down/common";
+import { hasPermission, useVotingCountdown } from "@down/common";
 import { cn } from "../../../../lib/utils";
 
 export default function VoteScreen() {
@@ -20,6 +20,7 @@ export default function VoteScreen() {
   const { events, updateEvent } = useEventStore();
   const event = events.find((e) => e.id === id);
 
+  const { timeLeft, isExpired } = useVotingCountdown(event?.votingEndsAt);
   const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -116,6 +117,19 @@ export default function VoteScreen() {
                 {event.votingOptions?.length ?? 0} OPTIONS
               </Text>
             </View>
+            {event.votingEndsAt && (
+              <View className={cn(
+                "px-3 py-1 rounded-chip",
+                isExpired ? "bg-error/20" : "bg-surface-container-lowest/20"
+              )}>
+                <Text className={cn(
+                  "font-heading text-xs",
+                  isExpired ? "text-error" : "text-on-tertiary-container"
+                )}>
+                  {isExpired ? "⏱ Voting closed" : `⏱ ${timeLeft} left`}
+                </Text>
+              </View>
+            )}
           </View>
         </SketchCard>
 
@@ -164,7 +178,7 @@ export default function VoteScreen() {
         </View>
 
         {/* Suggest a time — Members+ only */}
-        {canSuggestTime && (
+        {canSuggestTime && event.status === 'voting' && (
           <View className="gap-3">
             <SectionLabel text="suggest a time" />
             <SketchCard tilt={0.8} variant="default" className="gap-3">

@@ -7,12 +7,46 @@ import { getEventEmoji } from '../../utils/emoji';
 import { EventStatusMeta } from '../../types';
 import type { EventCardProps } from './index';
 
+const RSVP_CHIP: Record<string, { emoji: string; label: string; bg: string; color: string }> = {
+  going:     { emoji: '✅', label: 'Down',    bg: '#D8F8E7', color: '#1AA04F' },
+  maybe:     { emoji: '🤔', label: 'Maybe',   bg: '#FFEFC7', color: '#D17D04' },
+  not_going: { emoji: '😢', label: 'Flaking', bg: '#EEEFF5', color: '#7D859E' },
+};
+
 export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardProps) {
-  const tilt       = useMemo(() => (Math.random() * 2 - 1) * 1.5, []);
-  const goingCount = event.rsvps?.filter((r) => r.status === 'going').length ?? 0;
-  const currentRSVP = event.rsvps?.find((r) => r.userId === currentUserId)?.status;
-  const emoji      = getEventEmoji(event.title);
-  const meta       = EventStatusMeta[event.status];
+  const tilt          = useMemo(() => (Math.random() * 2 - 1) * 1.5, []);
+  const goingCount    = event.rsvps?.filter((r) => r.status === 'going').length ?? 0;
+  const currentRSVP   = event.rsvps?.find((r) => r.userId === currentUserId)?.status;
+  const emoji         = getEventEmoji(event.title);
+  const meta          = EventStatusMeta[event.status];
+  const confirmedTime = event.confirmedTimeOptionId
+    ? event.votingOptions?.find((o) => o.id === event.confirmedTimeOptionId)
+    : null;
+  const chipRSVP      = currentRSVP ? RSVP_CHIP[currentRSVP] : null;
+
+  let chipBg: string;
+  let chipColor: string;
+  let chipLabel: string;
+
+  if (event.status === 'voting') {
+    chipBg    = '#FFEFC7';
+    chipColor = '#D17D04';
+    chipLabel = '🗳️ VOTING';
+  } else if (chipRSVP) {
+    chipBg    = chipRSVP.bg;
+    chipColor = chipRSVP.color;
+    chipLabel = `${chipRSVP.emoji} ${chipRSVP.label.toUpperCase()}`;
+  } else {
+    chipBg    = event.status === 'confirmed' ? '#D8F8E7' : 'rgba(255,255,255,0.9)';
+    chipColor = event.status === 'confirmed' ? '#1AA04F' : '#3F6377';
+    chipLabel = `${meta.emoji} ${meta.label.toUpperCase()}`;
+  }
+
+  const displayDate = confirmedTime
+    ? `📅 ${confirmedTime.date}${confirmedTime.time ? ` at ${confirmedTime.time}` : ''}`
+    : event.date
+      ? `📅 ${event.date}${event.time ? ` at ${event.time}` : ''}`
+      : null;
 
   return (
     <Pressable onPress={onPress}>
@@ -20,9 +54,9 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
         {/* Cover area */}
         <View style={{ height: 128, borderRadius: 14, overflow: 'hidden', backgroundColor: '#E5EFF8', alignItems: 'center', justifyContent: 'center' }}>
           <Text style={{ fontSize: 48 }}>{emoji}</Text>
-          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(255,255,255,0.9)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 }}>
-            <Text style={{ fontFamily: 'PlusJakartaSans_700Bold', fontSize: 11, color: '#3F6377' }}>
-              {meta.emoji} {meta.label.toUpperCase()}
+          <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: chipBg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans_700Bold', fontSize: 11, color: chipColor }}>
+              {chipLabel}
             </Text>
           </View>
         </View>
@@ -30,9 +64,9 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
         {/* Info */}
         <View style={{ gap: 6 }}>
           <Text style={{ fontFamily: 'PlusJakartaSans_700Bold', fontSize: 20, color: '#131D23' }}>{event.title}</Text>
-          {event.date && (
+          {displayDate && (
             <Text style={{ fontFamily: 'BeVietnamPro_400Regular', fontSize: 14, color: '#76574E' }}>
-              📅 {event.date}{event.time ? ` at ${event.time}` : ''}
+              {displayDate}
             </Text>
           )}
           {event.location && (
@@ -64,6 +98,17 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
           <View style={{ backgroundColor: '#EBF5FD', borderRadius: 14, paddingVertical: 10, alignItems: 'center' }}>
             <Text style={{ fontFamily: 'PlusJakartaSans_700Bold', fontSize: 13, color: '#3F6377' }}>
               🗳️ {event.votingOptions?.length ?? 0} options — tap to vote
+            </Text>
+          </View>
+        )}
+
+        {/* Confirmed CTA */}
+        {event.status === 'confirmed' && (
+          <View style={{ backgroundColor: '#D8F8E7', borderRadius: 14, paddingVertical: 10, alignItems: 'center' }}>
+            <Text style={{ fontFamily: 'PlusJakartaSans_700Bold', fontSize: 13, color: '#1AA04F' }}>
+              {confirmedTime
+                ? `✅ Locked in — ${confirmedTime.date}${confirmedTime.time ? ` · ${confirmedTime.time}` : ''}`
+                : "✅ It's a go — RSVP now"}
             </Text>
           </View>
         )}

@@ -22,7 +22,7 @@ Deno.serve(async (req: Request) => {
     console.log("[suggest-time-option] fetching event:", event_id)
     const { data: event, error: eventError } = await supabase
       .from("events")
-      .select("id, group_id, status")
+      .select("id, group_id, status, voting_ends_at")
       .eq("id", event_id)
       .single()
 
@@ -83,7 +83,7 @@ async function fetchFullEvent(supabase: ReturnType<typeof createServiceClient>, 
     .select(`
       id, title, description, location, status, created_at,
       suggestedBy:profiles!events_created_by_fkey(id, name, avatar_url),
-      votingOptions:event_time_options(
+      votingOptions:event_time_options!event_time_options_event_id_fkey(
         id, date, time,
         votes:event_time_votes(count),
         voters:event_time_votes(user_id, profile:profiles!event_time_votes_user_id_fkey(id, name, avatar_url))

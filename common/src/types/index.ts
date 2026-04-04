@@ -24,10 +24,11 @@ export interface Group {
 }
 
 // ─── Event ──────────────────────────────────────────────
-export type EventStatus = 'voting' | 'confirmed' | 'pending';
+export type EventStatus = 'voting' | 'rsvp' | 'confirmed' | 'pending';
 
 export const EventStatusMeta: Record<EventStatus, { label: string; emoji: string }> = {
   voting:    { label: 'Voting',    emoji: '🗳️' },
+  rsvp:      { label: 'RSVP',     emoji: '📋' },
   confirmed: { label: 'Confirmed', emoji: '✅' },
   pending:   { label: 'Pending',   emoji: '⏳' },
 };
@@ -44,6 +45,8 @@ export interface EventSuggestion {
   suggestedBy: User;
   votingOptions: VotingOption[];
   rsvps: RSVP[];
+  confirmedTimeOptionId?: string; // set when transitioning from voting → rsvp
+  votingEndsAt?: string;           // ISO timestamp; triggers auto-transition when passed
 }
 
 // ─── Voting ─────────────────────────────────────────────
@@ -53,14 +56,6 @@ export interface VotingOption {
   time: string;
   votes: number;
   voters: User[];
-}
-
-export interface Vote {
-  id: string;
-  userId: string;
-  eventId: string;
-  votingOptionId: string;
-  createdAt: string;
 }
 
 // ─── RSVP ───────────────────────────────────────────────
@@ -88,6 +83,7 @@ export interface CreateEventInput {
   location?: string;
   group_id: string;
   time_options?: Array<{ date: string; time: string }>;
+  voting_ends_at?: string; // ISO timestamp for when voting closes automatically
 }
 
 export interface SuggestTimeOptionInput {
