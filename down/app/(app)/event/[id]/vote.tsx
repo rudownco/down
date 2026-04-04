@@ -4,21 +4,30 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Pressable, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SketchCard, BouncyButton, AvatarStack } from "../../../../components";
+import { SketchCard, BouncyButton, AvatarStack, FilledInput, SectionLabel } from "../../../../components";
 import { useAuth } from "../../../../src/context/AuthContext";
+import { useGroupStore } from "../../../../src/stores/groupStore";
 import { useEventStore } from "../../../../src/stores/eventStore";
 import * as api from "../../../../src/services/api";
+import { hasPermission, useVotingCountdown } from "@down/common";
 import { cn } from "../../../../lib/utils";
 
 export default function VoteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { events } = useEventStore();
+  const { groups } = useGroupStore();
+  const { events, updateEvent } = useEventStore();
   const event = events.find((e) => e.id === id);
 
+  const { timeLeft, isExpired } = useVotingCountdown(event?.votingEndsAt);
   const [selectedOptionIds, setSelectedOptionIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Suggest time state
+  const [suggestDate, setSuggestDate] = useState("");
+  const [suggestTime, setSuggestTime] = useState("");
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   if (!event) {
     return (
@@ -27,6 +36,13 @@ export default function VoteScreen() {
       </View>
     );
   }
+
+  // Find user's role in this event's group
+  const eventGroup = groups.find((g) =>
+    g.members.some((m) => m.id === user?.id)
+  );
+  const myRole = eventGroup?.members.find((m) => m.id === user?.id)?.role;
+  const canSuggestTime = myRole ? hasPermission(myRole, 'event.suggest_time') : false;
 
   const toggleOption = (optionId: string) => {
     setSelectedOptionIds((prev) => {
@@ -38,14 +54,34 @@ export default function VoteScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!user || selectedOptionIds.size === 0) return;
+    if (selectedOptionIds.size === 0) return;
     setIsSubmitting(true);
     try {
-      await api.submitVotes(event.id, user.id, Array.from(selectedOptionIds));
+      const updated = await api.submitVotes(event.id, Array.from(selectedOptionIds));
+      updateEvent(updated);
       router.back();
     } catch (e: any) {
       Alert.alert("Error", e.message);
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSuggestTime = async () => {
+    if (!suggestDate.trim() && !suggestTime.trim()) return;
+    setIsSuggesting(true);
+    try {
+      const updated = await api.suggestTimeOption({
+        event_id: event.id,
+        date: suggestDate.trim() || "TBD",
+        time: suggestTime.trim() || "TBD",
+      });
+      updateEvent(updated);
+      setSuggestDate("");
+      setSuggestTime("");
+    } catch (e: any) {
+      Alert.alert("Couldn't suggest time", e.message);
+    } finally {
+      setIsSuggesting(false);
     }
   };
 
@@ -81,6 +117,19 @@ export default function VoteScreen() {
                 {event.votingOptions?.length ?? 0} OPTIONS
               </Text>
             </View>
+            {event.votingEndsAt && (
+              <View className={cn(
+                "px-3 py-1 rounded-chip",
+                isExpired ? "bg-error/20" : "bg-surface-container-lowest/20"
+              )}>
+                <Text className={cn(
+                  "font-heading text-xs",
+                  isExpired ? "text-error" : "text-on-tertiary-container"
+                )}>
+                  {isExpired ? "⏱ Voting closed" : `⏱ ${timeLeft} left`}
+                </Text>
+              </View>
+            )}
           </View>
         </SketchCard>
 
@@ -127,6 +176,35 @@ export default function VoteScreen() {
             );
           })}
         </View>
+
+        {/* Suggest a time — Members+ only */}
+        {canSuggestTime && event.status === 'voting' && (
+          <View className="gap-3">
+            <SectionLabel text="suggest a time" />
+            <SketchCard tilt={0.8} variant="default" className="gap-3">
+              <FilledInput
+                placeholder="MM/DD/YYYY"
+                value={suggestDate}
+                onChangeText={setSuggestDate}
+                icon="calendar-outline"
+                keyboardType="numbers-and-punctuation"
+              />
+              <FilledInput
+                placeholder="7:00 PM"
+                value={suggestTime}
+                onChangeText={setSuggestTime}
+                icon="time-outline"
+              />
+              <BouncyButton
+                title={isSuggesting ? "Suggesting..." : "Suggest This Time"}
+                variant="secondary"
+                onPress={handleSuggestTime}
+                disabled={(!suggestDate.trim() && !suggestTime.trim()) || isSuggesting}
+                loading={isSuggesting}
+              />
+            </SketchCard>
+          </View>
+        )}
       </ScrollView>
 
       {/* Submit */}

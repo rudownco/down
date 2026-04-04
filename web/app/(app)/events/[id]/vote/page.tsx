@@ -77,7 +77,6 @@ export default function VotePage() {
       <VoteOptions
         eventId={id}
         votingOptions={event.votingOptions}
-        userId={user?.id}
       />
     </div>
   );

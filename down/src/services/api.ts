@@ -8,6 +8,7 @@ import {
   createGroup as _createGroup,
   fetchEvents as _fetchEvents,
   createEvent as _createEvent,
+  suggestTimeOption as _suggestTimeOption,
   submitVotes as _submitVotes,
   submitRSVP as _submitRSVP,
   createInvite as _createInvite,
@@ -17,7 +18,7 @@ import {
   getNotifications as _getNotifications,
   markNotificationAsRead as _markNotificationAsRead,
 } from '@down/common';
-import type { DownGroup, EventSuggestion, GroupRole, Notification, RSVP, RSVPStatus, CreateInviteResult } from '@down/common';
+import type { CreateEventInput, DownGroup, EventSuggestion, GroupRole, Notification, RSVP, RSVPStatus, CreateInviteResult, SuggestTimeOptionInput } from '@down/common';
 
 export async function fetchGroups(): Promise<DownGroup[]> {
   return _fetchGroups(supabase);
@@ -35,16 +36,20 @@ export async function fetchEvents(groupId: string): Promise<EventSuggestion[]> {
   return _fetchEvents(supabase, groupId);
 }
 
-export async function createEvent(event: EventSuggestion, groupId: string): Promise<EventSuggestion> {
-  return _createEvent(supabase, event, groupId);
+export async function createEvent(input: CreateEventInput): Promise<EventSuggestion> {
+  return _createEvent(supabase, input);
 }
 
-export async function submitVotes(eventId: string, optionIds: string[], userId: string): Promise<EventSuggestion> {
-  return _submitVotes(supabase, eventId, optionIds, userId);
+export async function suggestTimeOption(input: SuggestTimeOptionInput): Promise<EventSuggestion> {
+  return _suggestTimeOption(supabase, input);
 }
 
-export async function submitRSVP(eventId: string, status: RSVPStatus, userId: string): Promise<RSVP> {
-  return _submitRSVP(supabase, eventId, status, userId);
+export async function submitVotes(eventId: string, optionIds: string[]): Promise<EventSuggestion> {
+  return _submitVotes(supabase, eventId, optionIds);
+}
+
+export async function submitRSVP(eventId: string, status: RSVPStatus): Promise<RSVP> {
+  return _submitRSVP(supabase, eventId, status);
 }
 
 export async function removeGroupMember(groupId: string, userId: string): Promise<void> {

@@ -48,14 +48,6 @@ export interface VotingOption {
   voters: User[];
 }
 
-export interface Vote {
-  id: string;
-  userId: string;
-  eventId: string;
-  votingOptionId: string;
-  createdAt: string;
-}
-
 // ─── RSVP ───────────────────────────────────────────────
 export type RSVPStatus = 'going' | 'maybe' | 'not_going';
 

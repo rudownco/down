@@ -7,6 +7,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   AcceptInviteResult,
+  CreateEventInput,
   CreateInviteResult,
   DownGroup,
   EventSuggestion,
@@ -20,6 +21,7 @@ import type {
   NotificationType,
   RSVP,
   RSVPStatus,
+  SuggestTimeOptionInput,
 } from '../types';
 import { relativeFormatted } from '../utils/dateFormatting';
 
@@ -77,7 +79,7 @@ export async function fetchEvents(
   groupId: string
 ): Promise<EventSuggestion[]> {
   const { data, error } = await supabase.functions.invoke('get-group-events', {
-    method: 'GET',
+    method: 'POST',
     body: { group_id: groupId },
   });
   if (error) throw error;
@@ -86,12 +88,23 @@ export async function fetchEvents(
 
 export async function createEvent(
   supabase: SupabaseClient,
-  event: EventSuggestion,
-  groupId: string
+  input: CreateEventInput
 ): Promise<EventSuggestion> {
   const { data, error } = await supabase.functions.invoke('create-event', {
     method: 'POST',
-    body: { ...event, group_id: groupId },
+    body: input,
+  });
+  if (error) throw error;
+  return data as EventSuggestion;
+}
+
+export async function suggestTimeOption(
+  supabase: SupabaseClient,
+  input: SuggestTimeOptionInput
+): Promise<EventSuggestion> {
+  const { data, error } = await supabase.functions.invoke('suggest-time-option', {
+    method: 'POST',
+    body: input,
   });
   if (error) throw error;
   return data as EventSuggestion;
@@ -100,12 +113,24 @@ export async function createEvent(
 export async function submitVotes(
   supabase: SupabaseClient,
   eventId: string,
-  optionIds: string[],
-  userId: string
+  optionIds: string[]
 ): Promise<EventSuggestion> {
   const { data, error } = await supabase.functions.invoke('submit-votes', {
     method: 'POST',
-    body: { event_id: eventId, option_ids: optionIds, user_id: userId },
+    body: { event_id: eventId, option_ids: optionIds },
+  });
+  if (error) throw error;
+  return data as EventSuggestion;
+}
+
+export async function lockEventTime(
+  supabase: SupabaseClient,
+  eventId: string,
+  timeOptionId: string | null
+): Promise<EventSuggestion> {
+  const { data, error } = await supabase.functions.invoke('lock-event-time', {
+    method: 'POST',
+    body: { event_id: eventId, time_option_id: timeOptionId },
   });
   if (error) throw error;
   return data as EventSuggestion;
@@ -114,12 +139,11 @@ export async function submitVotes(
 export async function submitRSVP(
   supabase: SupabaseClient,
   eventId: string,
-  status: RSVPStatus,
-  userId: string
+  status: RSVPStatus
 ): Promise<RSVP> {
   const { data, error } = await supabase.functions.invoke('submit-rsvp', {
     method: 'POST',
-    body: { event_id: eventId, status, user_id: userId },
+    body: { event_id: eventId, status },
   });
   if (error) throw error;
   return data as RSVP;

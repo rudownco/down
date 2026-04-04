@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, ScrollView, Pressable, Share, ActivityIndicator, Alert, Modal } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { EventCardNew, AvatarCircle, SectionLabel, FloatingActionButton } from "../../../components";
+import { EventCardNew, AvatarCircle, SectionLabel, FloatingActionButton, CreateEventModal } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
@@ -20,12 +20,13 @@ export default function GroupDetailScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { groups, removeMember, removeGroup, loadGroups, updateMemberRole: storeUpdateRole } = useGroupStore();
-  const { events, loadEvents } = useEventStore();
+  const { events, loadEvents, addEvent } = useEventStore();
 
   const [inviteLoading, setInviteLoading] = useState(false);
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [inspectedMember, setInspectedMember] = useState<GroupMember | null>(null);
   const [roleUpdating, setRoleUpdating] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
   const cachedToken = useRef<string | null>(null);
 
   const group = groups.find((g) => g.id === id);
@@ -60,6 +61,7 @@ export default function GroupDetailScreen() {
   const myRole = group?.members.find((m) => m.id === user?.id)?.role;
   const canRemoveMembers = myRole ? hasPermission(myRole, 'member.remove') : false;
   const canInvite = myRole ? hasPermission(myRole, 'member.invite') : false;
+  const canCreateEvent = myRole ? hasPermission(myRole, 'event.create') : false;
 
   // Sync member changes from other clients in real-time
   useGroupMembersRealtime(supabase, id, (event) => {
@@ -258,13 +260,18 @@ export default function GroupDetailScreen() {
         </View>
       </ScrollView>
 
-      <FloatingActionButton
-        onPress={() =>
-          router.push({
-            pathname: "/(app)/event/create",
-            params: { groupId: id },
-          })
-        }
+      {canCreateEvent && (
+        <FloatingActionButton onPress={() => setShowCreateEvent(true)} />
+      )}
+
+      <CreateEventModal
+        visible={showCreateEvent}
+        groupId={id ?? ""}
+        onClose={() => setShowCreateEvent(false)}
+        onCreated={(event) => {
+          addEvent(event);
+          setShowCreateEvent(false);
+        }}
       />
 
       {/* Member inspect modal */}

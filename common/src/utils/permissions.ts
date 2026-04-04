@@ -9,6 +9,7 @@ export type Permission =
   | 'member.promote'
   | 'event.create'
   | 'event.edit'
+  | 'event.lock_time'
   | 'event.suggest_time'
   | 'event.vote'
   | 'event.rsvp'
@@ -24,7 +25,7 @@ const ROLE_RANK: Record<GroupRole, number> = {
 // Each role's OWN permissions (not inherited from lower roles)
 const ROLE_PERMISSIONS: Record<GroupRole, Permission[]> = {
   owner: ['group.delete', 'group.edit_settings', 'group.transfer_ownership'],
-  admin: ['member.invite', 'member.remove', 'member.promote', 'event.create', 'event.edit'],
+  admin: ['member.invite', 'member.remove', 'member.promote', 'event.create', 'event.edit', 'event.lock_time'],
   member: ['event.suggest_time'],
   initiate: ['event.view', 'event.vote', 'event.rsvp'],
 };

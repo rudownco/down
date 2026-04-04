@@ -9,7 +9,6 @@ import { CategoryPill, FilledInput, JellybeanChip, SketchCard, BouncyButton, Sec
 import { useAuth } from "../../../src/context/AuthContext";
 import { useEventStore } from "../../../src/stores/eventStore";
 import * as api from "../../../src/services/api";
-import { EventSuggestion, VotingOption } from "../../../src/types";
 import dayjs from "dayjs";
 
 const CATEGORIES = [
@@ -45,7 +44,7 @@ export default function CreateEventScreen() {
   const canSubmit = title.trim().length > 0;
 
   const handleSubmit = async () => {
-    if (!canSubmit || !user || !groupId) return;
+    if (!canSubmit || !groupId) return;
     setIsSubmitting(true);
 
     let formattedDate: string | undefined;
@@ -54,28 +53,16 @@ export default function CreateEventScreen() {
       formattedDate = parsed.format("dddd, MMM D");
     }
 
-    const votingOption: VotingOption = {
-      id: `vo-${Date.now()}`,
-      date: formattedDate ?? dayjs().add(1, "day").format("dddd, MMM D"),
-      time: timeText || "7:00 PM",
-      votes: 0,
-      voters: [],
-    };
-
-    const event: EventSuggestion = {
-      id: `e-${Date.now()}`,
-      title: title.trim(),
-      description: description || undefined,
-      location: location || undefined,
-      status: "voting",
-      attendees: [],
-      suggestedBy: user,
-      votingOptions: [votingOption],
-      rsvps: [],
-    };
-
     try {
-      const created = await api.createEvent(event, groupId);
+      const created = await api.createEvent({
+        title: title.trim(),
+        description: description || undefined,
+        location: location || undefined,
+        group_id: groupId,
+        time_options: (formattedDate || timeText)
+          ? [{ date: formattedDate ?? "", time: timeText || "TBD" }]
+          : undefined,
+      });
       addEvent(created);
       router.back();
     } catch {

@@ -28,7 +28,7 @@ Users can create and participate in multiple groups.
 **Note** - Permissions will be a hierarchy. A role will "inherit" the permissions of the roles below it.
 
 - **Owner** — Manage the group settings (include Transferring ownership to someone else, by default Owner role be the initial creator of group), promote Member -> Admin
-- **Admin** — Invite/Remove Members, create/edit Events, promote Initiate -> Member
+- **Admin** — Invite/Remove Members, create/edit Events, promote Initiate -> Member, lock the winning time on an event (advancing it from voting → confirmed)
 - **Member** - Suggest Times on Events
 - **Initiate** — Can view events, vote on times, and RSVP
 
@@ -332,12 +332,27 @@ Auth: Google OAuth (live), Apple OAuth (planned)
 - Use NativeWind (Tailwind classes) for styling on RN — avoid raw `StyleSheet` unless necessary
 - Use Tailwind classes for styling on web — no inline styles
 
+### Web UI components — shadcn only ⚠️ CRITICAL
+
+**All basic UI primitives on web must use shadcn components from `/web/components/ui/`. Never build custom replacements.**
+
+This includes: buttons, inputs, text fields, sliders, checkboxes, selects, dialogs, badges, cards, and any other primitive that shadcn covers.
+
+- ✅ `import { Button } from '@/components/ui/button'`
+- ✅ `import { Input } from '@/components/ui/input'`
+- ✅ `import { Slider } from '@/components/ui/slider'`
+- ❌ Never write a custom `<input>` or `<button>` element in place of a shadcn component
+- ❌ Never create a new `/web/components/ui/` file for something shadcn already provides
+
+If a needed shadcn component doesn't exist yet in `/web/components/ui/`, add it via the shadcn CLI or scaffold it following the existing pattern — don't hand-roll a substitute.
+
 ### Hardcoded rules — never violate these:
 - ❌ Never create Next.js API routes or Server Actions
 - ❌ Never use `@supabase/ssr`, server cookies, or server-side Supabase clients in Next.js
 - ❌ Never pass raw Supabase types (`user_metadata`, response shapes) into UI components
 - ❌ Never duplicate auth state logic — use the shared `useAuthState` hook from `@down/common`
 - ❌ Never write platform-specific code that could be shared
+- ❌ Never use raw HTML inputs/buttons on web — always use shadcn components
 
 ### When suggesting architecture:
 - Think long-term scalability

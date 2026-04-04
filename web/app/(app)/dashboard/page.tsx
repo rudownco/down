@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { EventCard, AvatarCircle, getGreeting } from '@down/common';
 import { fetchGroups, fetchEvents } from '@down/common';
 import type { DownGroup, EventSuggestion } from '@down/common';
+import { EventDetailModal } from '@/components/EventDetailModal';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<DownGroup[]>([]);
   const [events, setEvents] = useState<EventSuggestion[]>([]);
+  const [inspectedEvent, setInspectedEvent] = useState<EventSuggestion | null>(null);
   const greeting = getGreeting();
 
   // user is already our domain User type (mapped by shared useAuthState hook)
@@ -37,6 +39,17 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      {inspectedEvent && (
+        <EventDetailModal
+          event={inspectedEvent}
+          currentUserId={user?.id}
+          onClose={() => setInspectedEvent(null)}
+          onEventUpdated={(updated) => {
+            setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+            setInspectedEvent(updated);
+          }}
+        />
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -82,7 +95,12 @@ export default function DashboardPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                currentUserId={user?.id}
+                onPress={() => setInspectedEvent(event)}
+              />
             ))}
           </div>
         )}

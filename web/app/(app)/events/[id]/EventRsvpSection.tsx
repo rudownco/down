@@ -16,9 +16,7 @@ export default function EventRsvpSection({ eventId, currentRsvpStatus }: Props) 
 
   async function handleRsvp(status: RSVPStatus) {
     setSelected(status);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    await submitRSVP(supabase, eventId, status, user.id).catch(console.error);
+    await submitRSVP(supabase, eventId, status).catch(console.error);
   }
 
   return (
