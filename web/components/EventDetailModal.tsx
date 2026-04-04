@@ -1,22 +1,24 @@
 'use client';
 
 import { useState } from 'react';
-import { X, MapPin, Calendar, Clock, Check } from 'lucide-react';
-import { AvatarCircle, AvatarStack, RSVPButtons, EventStatusMeta, getEventEmoji, getRsvpUsers } from '@down/common';
-import { submitVotes, submitRSVP } from '@down/common';
-import type { EventSuggestion, RSVPStatus } from '@down/common';
+import { X, MapPin, Calendar, Clock, Check, Plus } from 'lucide-react';
+import { AvatarCircle, AvatarStack, RSVPButtons, EventStatusMeta, getEventEmoji, getRsvpUsers, useVotingCountdown, hasPermission } from '@down/common';
+import { submitVotes, submitRSVP, suggestTimeOption } from '@down/common';
+import type { EventSuggestion, RSVPStatus, GroupRole } from '@down/common';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 
 interface Props {
   event: EventSuggestion;
   currentUserId?: string;
+  userRole?: GroupRole;
   onClose: () => void;
   onEventUpdated: (updated: EventSuggestion) => void;
 }
 
-export function EventDetailModal({ event: initialEvent, currentUserId, onClose, onEventUpdated }: Props) {
+export function EventDetailModal({ event: initialEvent, currentUserId, userRole, onClose, onEventUpdated }: Props) {
   const [event, setEvent] = useState(initialEvent);
 
   // Voting state
@@ -31,9 +33,27 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
   );
   const [isRsvping, setIsRsvping] = useState(false);
 
+  // Suggest time state
+  const [suggestDate, setSuggestDate] = useState('');
+  const [suggestTime, setSuggestTime] = useState('');
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState('');
+  const canSuggestTime = userRole ? hasPermission(userRole, 'event.suggest_time') : false;
+
   const emoji = getEventEmoji(event.title);
   const meta = EventStatusMeta[event.status];
+  const { timeLeft, isExpired } = useVotingCountdown(event.votingEndsAt);
   const maxVotes = Math.max(0, ...(event.votingOptions ?? []).map((o) => o.votes));
+  const confirmedTime = event.confirmedTimeOptionId
+    ? event.votingOptions?.find((o) => o.id === event.confirmedTimeOptionId)
+    : null;
+
+  const RSVP_CHIP = {
+    going:     { emoji: '✅', label: 'Down',    classes: 'bg-[#D8F8E7] text-[#1AA04F]' },
+    maybe:     { emoji: '🤔', label: 'Maybe',   classes: 'bg-[#FFEFC7] text-[#D17D04]' },
+    not_going: { emoji: '😢', label: 'Flaking', classes: 'bg-[#EEEFF5] text-[#7D859E]' },
+  } as const;
+  const chipRSVP = rsvpStatus ? RSVP_CHIP[rsvpStatus] : null;
 
   const goingUsers = getRsvpUsers(event, 'going', event.attendees ?? []);
   const maybeUsers = getRsvpUsers(event, 'maybe', event.attendees ?? []);
@@ -81,6 +101,27 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
     }
   }
 
+  async function handleSuggestTime() {
+    if (!suggestDate.trim() && !suggestTime.trim()) return;
+    setIsSuggesting(true);
+    setSuggestError('');
+    try {
+      const updated = await suggestTimeOption(supabase, {
+        event_id: event.id,
+        date: suggestDate.trim() || 'TBD',
+        time: suggestTime.trim() || 'TBD',
+      });
+      setEvent(updated);
+      onEventUpdated(updated);
+      setSuggestDate('');
+      setSuggestTime('');
+    } catch (e: any) {
+      setSuggestError(e?.message ?? 'Something went wrong');
+    } finally {
+      setIsSuggesting(false);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50"
@@ -106,14 +147,22 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={cn(
-              'text-xs font-medium px-2.5 py-0.5 rounded-chip whitespace-nowrap',
-              event.status === 'voting'    ? 'bg-[#FFEFC7] text-[#D17D04]' :
-              event.status === 'confirmed' ? 'bg-[#D8F8E7] text-[#1AA04F]' :
-              'bg-[#EEEFF5] text-[#7D859E]'
-            )}>
-              {meta.emoji} {meta.label}
-            </span>
+            {event.status === 'voting' ? (
+              <span className="text-xs font-medium px-2.5 py-0.5 rounded-chip whitespace-nowrap bg-[#FFEFC7] text-[#D17D04]">
+                🗳️ Voting
+              </span>
+            ) : chipRSVP ? (
+              <span className={cn('text-xs font-medium px-2.5 py-0.5 rounded-chip whitespace-nowrap', chipRSVP.classes)}>
+                {chipRSVP.emoji} {chipRSVP.label}
+              </span>
+            ) : (
+              <span className={cn(
+                'text-xs font-medium px-2.5 py-0.5 rounded-chip whitespace-nowrap',
+                event.status === 'confirmed' ? 'bg-[#D8F8E7] text-[#1AA04F]' : 'bg-[#EEEFF5] text-[#7D859E]'
+              )}>
+                {meta.emoji} {meta.label}
+              </span>
+            )}
             <button
               onClick={onClose}
               className="p-1.5 rounded-full hover:bg-surface-container-high transition-colors text-on-surface-variant"
@@ -124,7 +173,7 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
         </div>
 
         {/* Event details */}
-        {(event.location || event.date || event.time) && (
+        {(event.location || event.date || event.time || confirmedTime) && (
           <div className="flex flex-col gap-1.5 px-5 pb-4 text-sm text-on-surface-variant flex-shrink-0">
             {event.location && (
               <div className="flex items-center gap-2">
@@ -132,7 +181,12 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
                 <span>{event.location}</span>
               </div>
             )}
-            {(event.date || event.time) && (
+            {confirmedTime ? (
+              <div className="flex items-center gap-2 text-[#1AA04F] font-medium">
+                <Calendar size={13} className="flex-shrink-0" />
+                <span>{[confirmedTime.date, confirmedTime.time].filter(Boolean).join(' · ')}</span>
+              </div>
+            ) : (event.date || event.time) && (
               <div className="flex items-center gap-2">
                 <Calendar size={13} className="flex-shrink-0" />
                 <span>{[event.date, event.time].filter(Boolean).join(' · ')}</span>
@@ -146,9 +200,21 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
           {/* ── VOTING MODE ── */}
           {event.status === 'voting' && (
             <div className="flex flex-col gap-3">
-              <p className="text-sm font-heading font-semibold text-on-surface">
-                {voteCast ? '✅ Vote cast! Change your pick:' : 'Pick your times 🗳️'}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-heading font-semibold text-on-surface">
+                  {voteCast ? '✅ Vote cast! Change your pick:' : 'Pick your times 🗳️'}
+                </p>
+                {event.votingEndsAt && (
+                  <span className={cn(
+                    'text-xs font-medium px-2 py-0.5 rounded-chip whitespace-nowrap flex-shrink-0',
+                    isExpired
+                      ? 'bg-error/10 text-error'
+                      : 'bg-[#FFEFC7] text-[#D17D04]'
+                  )}>
+                    {isExpired ? '⏱ Voting closed' : `⏱ ${timeLeft} left`}
+                  </span>
+                )}
+              </div>
               <div className="flex flex-col gap-2">
                 {(event.votingOptions ?? []).map((option) => {
                   const isSelected = selectedOptionIds.includes(option.id);
@@ -214,6 +280,37 @@ export function EventDetailModal({ event: initialEvent, currentUserId, onClose, 
                   ? `Cast Vote (${selectedOptionIds.length})`
                   : 'Select at least one time'}
               </Button>
+
+              {/* Suggest a time — members+ only */}
+              {canSuggestTime && (
+                <div className="border-t border-outline-variant/20 pt-3 flex flex-col gap-2">
+                  <p className="text-xs font-heading font-semibold text-on-surface-variant uppercase tracking-wide">
+                    Suggest a time
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      placeholder="MM/DD/YYYY"
+                      value={suggestDate}
+                      onChange={(e) => setSuggestDate(e.target.value)}
+                    />
+                    <Input
+                      placeholder="7:00 PM"
+                      value={suggestTime}
+                      onChange={(e) => setSuggestTime(e.target.value)}
+                    />
+                  </div>
+                  {suggestError && <p className="text-xs text-error">{suggestError}</p>}
+                  <Button
+                    variant="secondary"
+                    disabled={(!suggestDate.trim() && !suggestTime.trim()) || isSuggesting}
+                    onClick={handleSuggestTime}
+                    className="w-full"
+                  >
+                    <Plus size={13} />
+                    {isSuggesting ? 'Adding...' : 'Add time option'}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

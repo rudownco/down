@@ -368,6 +368,7 @@ export default function GroupDetailPage() {
         <EventDetailModal
           event={inspectedEvent}
           currentUserId={user?.id}
+          userRole={myRole}
           onClose={() => setInspectedEvent(null)}
           onEventUpdated={(updated) => {
             setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));

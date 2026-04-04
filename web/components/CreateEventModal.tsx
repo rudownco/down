@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Plus, MapPin, Calendar, Clock, Trash2 } from 'lucide-react';
-import { createEvent } from '@down/common';
+import { X, Plus, MapPin, Calendar, Clock, Trash2, Timer } from 'lucide-react';
+import { createEvent, cn } from '@down/common';
 import type { CreateEventInput, EventSuggestion } from '@down/common';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/lib/supabase';
 
 interface Props {
@@ -24,6 +25,7 @@ export function CreateEventModal({ groupId, onClose, onCreated }: Props) {
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [timeOptions, setTimeOptions] = useState<TimeOption[]>([{ date: '', time: '' }]);
+  const [votingHours, setVotingHours] = useState<number | null>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,6 +54,9 @@ export function CreateEventModal({ groupId, onClose, onCreated }: Props) {
       location: location.trim() || undefined,
       group_id: groupId,
       time_options: filledOptions.length > 0 ? filledOptions : undefined,
+      voting_ends_at: votingHours != null
+        ? new Date(Date.now() + votingHours * 60 * 60 * 1000).toISOString()
+        : undefined,
     };
 
     try {
@@ -112,12 +117,12 @@ export function CreateEventModal({ groupId, onClose, onCreated }: Props) {
           {/* Time options */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
-              When? (optional)
+              {votingHours != null ? 'Time Options' : "When's it happening?"}
             </span>
             <div className="flex flex-col gap-3 bg-surface-container-low rounded-xl p-3">
               {timeOptions.map((opt, index) => (
                 <div key={index} className="flex flex-col gap-2">
-                  {timeOptions.length > 1 && (
+                  {votingHours != null && timeOptions.length > 1 && (
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] text-outline uppercase tracking-widest">
                         Option {index + 1}
@@ -147,18 +152,72 @@ export function CreateEventModal({ groupId, onClose, onCreated }: Props) {
                   </div>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={addTimeOption}
-                className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/70 transition-colors self-start"
-              >
-                <Plus size={13} />
-                suggest another time
-              </button>
+              {votingHours != null && (
+                <button
+                  type="button"
+                  onClick={addTimeOption}
+                  className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/70 transition-colors self-start"
+                >
+                  <Plus size={13} />
+                  add another option
+                </button>
+              )}
             </div>
             <p className="text-[10px] text-outline uppercase tracking-widest">
               heads up: no flaking allowed!
             </p>
+          </div>
+
+          {/* Voting deadline */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-on-surface-variant uppercase tracking-wide flex items-center gap-1.5">
+                <Timer size={12} /> Voting deadline
+              </span>
+              <button
+                type="button"
+                onClick={() => setVotingHours(v => v == null ? 1 : null)}
+                className={cn(
+                  'text-xs font-medium px-2.5 py-0.5 rounded-chip transition-colors',
+                  votingHours != null
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+                )}
+              >
+                {votingHours != null ? '⏱ On' : 'Off'}
+              </button>
+            </div>
+            {votingHours == null && (
+              <div className="bg-[#FFEFC7] border-l-[3px] border-[#D17D04] rounded-r-xl px-4 py-3 flex flex-col gap-0.5">
+                <p className="text-[10px] font-medium text-[#D17D04] uppercase tracking-widest">
+                  ⚠️ heads up
+                </p>
+                <p className="text-sm text-[#A85E00]">
+                  skipping the vote locks in whatever time you set — squad just shows up or doesn&apos;t
+                </p>
+              </div>
+            )}
+            {votingHours != null && (
+              <div className="bg-surface-container-low rounded-xl p-4 flex flex-col gap-3">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="font-heading font-bold text-4xl text-primary">{votingHours}</span>
+                  <span className="font-heading text-lg text-on-surface-variant">
+                    {votingHours === 1 ? 'hr' : 'hrs'}
+                  </span>
+                </div>
+                <Slider
+                  min={1}
+                  max={24}
+                  step={1}
+                  value={[votingHours]}
+                  onValueChange={([v]) => setVotingHours(v)}
+                />
+                <div className="flex justify-between text-[10px] text-outline uppercase tracking-widest">
+                  <span>1h</span>
+                  <span>24h</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Description */}
