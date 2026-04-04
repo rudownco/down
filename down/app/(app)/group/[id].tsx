@@ -19,7 +19,7 @@ export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { groups, removeMember, updateMemberRole: storeUpdateRole } = useGroupStore();
+  const { groups, removeMember, removeGroup, loadGroups, updateMemberRole: storeUpdateRole } = useGroupStore();
   const { events, loadEvents, addEvent } = useEventStore();
 
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -65,7 +65,16 @@ export default function GroupDetailScreen() {
 
   // Sync member changes from other clients in real-time
   useGroupMembersRealtime(supabase, id, (event) => {
-    if (event.type === 'removed') removeMember(id, event.userId);
+    if (event.type === 'removed') {
+      if (event.userId === user?.id) {
+        // Current user was removed — drop the group and go back
+        removeGroup(id);
+        router.replace('/(app)/(tabs)/groups');
+        return;
+      }
+      removeMember(id, event.userId);
+    }
+    if (event.type === 'added') loadGroups();
   });
 
   const handleRemoveMember = useCallback((memberId: string, memberName: string) => {

@@ -10,10 +10,12 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useGroupStore } from "../../../src/stores/groupStore";
+import { useNotificationStore } from "../../../src/stores/notificationStore";
 
 export default function GroupsTab() {
   const router = useRouter();
   const { groups, isLoading, error, loadGroups } = useGroupStore();
+  const { unreadGroupIds } = useNotificationStore();
 
   useEffect(() => {
     loadGroups();
@@ -90,6 +92,9 @@ export default function GroupsTab() {
                   {group.memberCount ?? group.members.length} members · {group.lastActivity}
                 </Text>
               </View>
+              {unreadGroupIds.includes(group.id) && (
+                <View className="w-2.5 h-2.5 rounded-full bg-primary mr-1" />
+              )}
               <Ionicons name="chevron-forward" size={18} color="#677A86" />
             </Pressable>
           ))

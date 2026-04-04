@@ -4,3 +4,4 @@ export { useGroupMembersRealtime } from './useGroupMembersRealtime';
 export type { MemberRealtimeEvent } from './useGroupMembersRealtime';
 export { useVotingCountdown } from './useVotingCountdown';
 export type { VotingCountdown } from './useVotingCountdown';
+export { useNotificationsRealtime } from './useNotificationsRealtime';
