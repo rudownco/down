@@ -1,4 +1,5 @@
 export { AvatarCircle } from './AvatarCircle';
+export { CreateEventModal } from './CreateEventModal';
 export { AvatarStack } from './AvatarStack';
 export { BottomTabBar } from './BottomTabBar';
 export { BouncyButton } from './BouncyButton';

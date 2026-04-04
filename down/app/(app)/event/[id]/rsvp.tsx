@@ -8,13 +8,13 @@ import { SketchCard, RSVPButtonRow, BouncyButton, AvatarCircle, SectionLabel } f
 import { useAuth } from "../../../../src/context/AuthContext";
 import { useEventStore } from "../../../../src/stores/eventStore";
 import * as api from "../../../../src/services/api";
-import type { RSVPStatus } from "../../../../src/types";
+import type { EventSuggestion, RSVPStatus } from "../../../../src/types";
 
 export default function RSVPScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
-  const { events } = useEventStore();
+  const { events, updateEvent } = useEventStore();
   const event = events.find((e) => e.id === id);
 
   const [selectedStatus, setSelectedStatus] = useState<RSVPStatus | undefined>(
@@ -35,10 +35,16 @@ export default function RSVPScreen() {
   const notGoingRSVPs = event.rsvps?.filter((r) => r.status === "not_going") ?? [];
 
   const handleSubmit = async () => {
-    if (!user || !selectedStatus) return;
+    if (!selectedStatus) return;
     setIsSubmitting(true);
     try {
-      await api.submitRSVP(event.id, user.id, selectedStatus);
+      const rsvp = await api.submitRSVP(event.id, selectedStatus);
+      // Update the event in the store with the new/updated RSVP
+      const updatedRsvps = [
+        ...(event.rsvps ?? []).filter((r) => r.userId !== rsvp.userId),
+        rsvp,
+      ];
+      updateEvent({ ...event, rsvps: updatedRsvps } as EventSuggestion);
       router.back();
     } catch (e: any) {
       Alert.alert("Error", e.message);

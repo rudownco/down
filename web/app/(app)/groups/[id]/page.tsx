@@ -7,6 +7,8 @@ import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel, hasPermiss
 import { fetchGroups, fetchEvents, createInvite, removeGroupMember, updateMemberRole, transferOwnership, useGroupMembersRealtime } from '@down/common';
 import type { DownGroup, EventSuggestion, GroupMember, GroupRole } from '@down/common';
 import { Button } from '@/components/ui/button';
+import { CreateEventModal } from '@/components/CreateEventModal';
+import { EventDetailModal } from '@/components/EventDetailModal';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -23,6 +25,8 @@ export default function GroupDetailPage() {
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
   const [inspectedMember, setInspectedMember] = useState<GroupMember | null>(null);
   const [roleUpdating, setRoleUpdating] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [inspectedEvent, setInspectedEvent] = useState<EventSuggestion | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -43,6 +47,7 @@ export default function GroupDetailPage() {
   const myRole = group?.members.find((m) => m.id === user?.id)?.role;
   const canRemoveMembers = myRole ? hasPermission(myRole, 'member.remove') : false;
   const canInvite = myRole ? hasPermission(myRole, 'member.invite') : false;
+  const canCreateEvent = myRole ? hasPermission(myRole, 'event.create') : false;
 
   useGroupMembersRealtime(supabase, id, (event) => {
     if (event.type === 'removed') {
@@ -358,16 +363,43 @@ export default function GroupDetailPage() {
         </div>
       )}
 
+      {/* Event detail modal */}
+      {inspectedEvent && (
+        <EventDetailModal
+          event={inspectedEvent}
+          currentUserId={user?.id}
+          onClose={() => setInspectedEvent(null)}
+          onEventUpdated={(updated) => {
+            setEvents((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+            setInspectedEvent(updated);
+          }}
+        />
+      )}
+
+      {/* Create event modal */}
+      {showCreateEvent && (
+        <CreateEventModal
+          groupId={id}
+          onClose={() => setShowCreateEvent(false)}
+          onCreated={(event) => {
+            setEvents((prev) => [event, ...prev]);
+            setShowCreateEvent(false);
+          }}
+        />
+      )}
+
       {/* Events */}
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide">
             Hangouts
           </h2>
-          <Button variant="primary" size="sm">
-            <Plus size={14} />
-            Plan something
-          </Button>
+          {canCreateEvent && (
+            <Button variant="primary" size="sm" onClick={() => setShowCreateEvent(true)}>
+              <Plus size={14} />
+              Plan something
+            </Button>
+          )}
         </div>
 
         {events.length === 0 ? (
@@ -379,7 +411,12 @@ export default function GroupDetailPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {events.map((event) => (
-              <EventCard key={event.id} event={event} />
+              <EventCard
+                key={event.id}
+                event={event}
+                currentUserId={user?.id}
+                onPress={() => setInspectedEvent(event)}
+              />
             ))}
           </div>
         )}

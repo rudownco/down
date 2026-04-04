@@ -33,6 +33,21 @@ verify_jwt = false
 [functions.remove-group-member]
 verify_jwt = false
 
+[functions.create-event]
+verify_jwt = false
+
+[functions.get-group-events]
+verify_jwt = false
+
+[functions.suggest-time-option]
+verify_jwt = false
+
+[functions.submit-votes]
+verify_jwt = false
+
+[functions.submit-rsvp]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

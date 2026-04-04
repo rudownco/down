@@ -80,6 +80,22 @@ export interface RSVP {
   updatedAt: string;
 }
 
+// ─── Event Input Types ───────────────────────────────────
+
+export interface CreateEventInput {
+  title: string;
+  description?: string;
+  location?: string;
+  group_id: string;
+  time_options?: Array<{ date: string; time: string }>;
+}
+
+export interface SuggestTimeOptionInput {
+  event_id: string;
+  date: string;
+  time: string;
+}
+
 // ─── Invites ────────────────────────────────────────────
 export interface AcceptInviteResult {
   groupId: string;

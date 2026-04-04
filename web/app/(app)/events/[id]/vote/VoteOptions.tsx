@@ -12,10 +12,9 @@ import type { VotingOption } from '@down/common';
 interface Props {
   eventId: string;
   votingOptions: VotingOption[];
-  userId?: string;
 }
 
-export default function VoteOptions({ eventId, votingOptions, userId }: Props) {
+export default function VoteOptions({ eventId, votingOptions }: Props) {
   const [selected, setSelected] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,9 +27,9 @@ export default function VoteOptions({ eventId, votingOptions, userId }: Props) {
   }
 
   async function handleSubmit() {
-    if (!userId || selected.length === 0) return;
+    if (selected.length === 0) return;
     setIsSubmitting(true);
-    await submitVotes(supabase, eventId, selected, userId).catch(console.error);
+    await submitVotes(supabase, eventId, selected).catch(console.error);
     setIsSubmitting(false);
   }
 
