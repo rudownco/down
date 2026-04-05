@@ -270,6 +270,85 @@ useMyHook(supabase, id, onAdded, onRemoved)
 
 **Why:** Discriminated unions extend without breaking existing consumers and force exhaustive handling at call sites.
 
+### 13. Never Duplicate Type Definitions — Re-export from `@down/common`
+
+Platform packages (`/down`, `/web`) must never redefine types that already exist in `@down/common`. Define once in common, re-export everywhere else.
+
+```typescript
+// ✅ Correct — in down/src/types/index.ts
+export type { EventSuggestion, DownGroup, RSVP, RSVPStatus, User } from '@down/common';
+
+// ❌ Wrong — redefines the type locally, drifts silently when common changes
+export interface EventSuggestion { id: string; title: string; ... }
+```
+
+**Why:** Local redefinitions fall out of sync when the common type gains new fields. TypeScript won't catch the drift if the shapes are structurally compatible — the mismatch only surfaces at runtime.
+
+### 14. Never Fetch a Single Event by Searching All Groups
+
+Use `fetchEventById(supabase, eventId)` from `@down/common` when you need one event. Never loop over all groups and call `fetchEvents()` per group to find a single item.
+
+```typescript
+// ✅ Correct — single Edge Function call
+const event = await fetchEventById(supabase, eventId);
+
+// ❌ Wrong — N+1: fetches every group's events to find one
+const groups = await fetchGroups(supabase);
+for (const group of groups) {
+  const events = await fetchEvents(supabase, group.id);
+  const found = events.find((e) => e.id === id);
+  if (found) { ... }
+}
+```
+
+**Why:** The loop fires one network request per group the user belongs to. 10 groups = 10 requests per page load, scaling linearly as users join more groups.
+
+### 15. Optimistic Updates Must Roll Back on Failure
+
+When applying an optimistic UI update before an async operation resolves, always capture the previous state and restore it if the operation fails.
+
+```typescript
+// ✅ Correct — captures and restores on error
+const prev = selected;
+setSelected(status);
+await submitRSVP(supabase, eventId, status).catch(() => setSelected(prev));
+
+// ❌ Wrong — shows wrong state if the request fails
+setSelected(status);
+await submitRSVP(supabase, eventId, status).catch(console.error);
+```
+
+**Why:** Silent failures leave the UI in an incorrect state the user can't recover from without a page reload.
+
+### 16. Use Zustand Stores for Persistent UI State, Not `useState` in Layouts
+
+State that must survive client-side navigation (unread counts, fetched lists displayed in the layout shell) belongs in a Zustand store, not component `useState`.
+
+```typescript
+// ✅ Correct — survives navigation, initialized once
+const { notifications, addNotification } = useNotificationStore();
+
+// ❌ Wrong — resets every time the layout remounts on navigation
+const [notifications, setNotifications] = useState<Notification[]>([]);
+```
+
+Web Zustand stores live in `/web/lib/stores/`. Mirror the pattern from the RN stores in `/down/src/stores/`.
+
+### 17. Use `sonner` for Error/Success Feedback on Web — No `alert()`
+
+All user-facing error and success messages on web use `sonner` toasts. Never use `window.alert()` or `window.confirm()` for feedback (they block the main thread and look broken).
+
+```typescript
+// ✅ Correct
+import { toast } from 'sonner';
+toast.error(e?.message ?? 'Something went wrong');
+
+// ❌ Wrong — blocks main thread, jarring UX
+alert(e?.message ?? 'Something went wrong');
+```
+
+`<Toaster richColors position="bottom-center" />` is mounted in `web/app/layout.tsx`. For destructive confirmations, build an inline confirmation UI or a shadcn `AlertDialog` — never `window.confirm()`.
+
 ---
 
 ## UX & Tone Guidelines
@@ -323,6 +402,9 @@ Auth: Google OAuth (live), Apple OAuth (planned)
 2. **Is this a backend concern?** → It goes in a Supabase Edge Function, not Next.js
 3. **Am I exposing a Supabase type to the UI?** → Map it to a domain type first
 4. **Am I duplicating something that already exists in `/common`?** → Don't — import it
+5. **Does this type already exist in `@down/common`?** → Re-export it, never redefine it
+6. **Am I applying an optimistic update?** → Capture prev state and roll back on error
+7. **Is this UI state needed across navigation?** → Put it in a Zustand store, not `useState`
 
 ### When generating code:
 - Use clear folder structures matching the project layout above
@@ -353,6 +435,10 @@ If a needed shadcn component doesn't exist yet in `/web/components/ui/`, add it 
 - ❌ Never duplicate auth state logic — use the shared `useAuthState` hook from `@down/common`
 - ❌ Never write platform-specific code that could be shared
 - ❌ Never use raw HTML inputs/buttons on web — always use shadcn components
+- ❌ Never redefine types in `/down` or `/web` that already exist in `@down/common` — re-export instead
+- ❌ Never loop over all groups + `fetchEvents()` to find a single event — use `fetchEventById()`
+- ❌ Never use `window.alert()` or `window.confirm()` on web — use `sonner` toasts and shadcn `AlertDialog`
+- ❌ Never leave optimistic UI updates without a rollback on async failure
 
 ### When suggesting architecture:
 - Think long-term scalability
