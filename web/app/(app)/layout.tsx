@@ -6,15 +6,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Home, Users, User, Bell } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { getNotifications, markNotificationAsRead, useNotificationsRealtime, relativeFormatted, fetchGroups } from '@down/common';
-import type { Notification, DownGroup } from '@down/common';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/lib/stores/notificationStore';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { session, user, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [groups, setGroups] = useState<DownGroup[]>([]);
+  const { notifications, groups, setNotifications, setGroups, addNotification, markAllRead } = useNotificationStore();
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
 
@@ -26,9 +25,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     fetchGroups(supabase).then(setGroups).catch(() => {});
   }, [user?.id]);
 
-  useNotificationsRealtime(supabase, user?.id, (notif) => {
-    setNotifications((prev) => [notif, ...prev]);
-  });
+  useNotificationsRealtime(supabase, user?.id, addNotification);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -50,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         .forEach((n) => {
           markNotificationAsRead(supabase, n.id).catch(() => {});
         });
-      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      markAllRead();
     }
     setIsOpen((o) => !o);
   };

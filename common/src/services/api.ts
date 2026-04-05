@@ -29,6 +29,18 @@ function mapMember(m: GroupMemberResponse): GroupMember {
   return { id: m.id, name: m.name, avatarUrl: m.avatar_url ?? undefined, role: m.role };
 }
 
+function mapGroupResponse(g: GroupResponse): DownGroup {
+  return {
+    id: g.id,
+    name: g.name,
+    members: (g.members ?? []).map(mapMember),
+    memberCount: g.member_count,
+    lastActivity: relativeFormatted(g.last_activity),
+    unreadCount: 0,
+    createdBy: g.created_by,
+  };
+}
+
 // ─── Groups ─────────────────────────────────────────────
 
 export async function fetchGroups(supabase: SupabaseClient): Promise<DownGroup[]> {
@@ -38,15 +50,7 @@ export async function fetchGroups(supabase: SupabaseClient): Promise<DownGroup[]
 
   if (error) throw error;
 
-  return (data as GroupResponse[]).map((g) => ({
-    id: g.id,
-    name: g.name,
-    members: (g.members ?? []).map(mapMember),
-    memberCount: g.member_count,
-    lastActivity: relativeFormatted(g.last_activity),
-    unreadCount: 0,
-    createdBy: g.created_by,
-  }));
+  return (data as GroupResponse[]).map(mapGroupResponse);
 }
 
 export async function createGroup(
@@ -60,19 +64,25 @@ export async function createGroup(
 
   if (error) throw error;
 
-  const g = data as GroupResponse;
-  return {
-    id: g.id,
-    name: g.name,
-    members: (g.members ?? []).map(mapMember),
-    memberCount: g.member_count,
-    lastActivity: relativeFormatted(g.last_activity),
-    unreadCount: 0,
-    createdBy: g.created_by,
-  };
+  return mapGroupResponse(data as GroupResponse);
 }
 
 // ─── Events ─────────────────────────────────────────────
+
+export async function fetchEventById(
+  supabase: SupabaseClient,
+  eventId: string
+): Promise<EventSuggestion | null> {
+  const { data, error } = await supabase.functions.invoke('get-event', {
+    method: 'POST',
+    body: { event_id: eventId },
+  });
+  if (error) {
+    if (error?.message?.includes('Event not found') || error?.message?.includes('Not a member')) return null;
+    throw error;
+  }
+  return data as EventSuggestion;
+}
 
 export async function fetchEvents(
   supabase: SupabaseClient,

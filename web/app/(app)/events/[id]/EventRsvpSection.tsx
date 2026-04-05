@@ -15,8 +15,9 @@ export default function EventRsvpSection({ eventId, currentRsvpStatus }: Props) 
   const [selected, setSelected] = useState<RSVPStatus | undefined>(currentRsvpStatus);
 
   async function handleRsvp(status: RSVPStatus) {
+    const prev = selected;
     setSelected(status);
-    await submitRSVP(supabase, eventId, status).catch(console.error);
+    await submitRSVP(supabase, eventId, status).catch(() => setSelected(prev));
   }
 
   return (
