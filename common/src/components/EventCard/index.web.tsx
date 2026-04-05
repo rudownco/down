@@ -2,7 +2,7 @@ import React from 'react';
 import { AvatarStack } from '../AvatarStack';
 import { RSVPButtons } from '../RSVPButtons';
 import { Card } from '../Card';
-import { getEventEmoji, EventStatusMeta } from '../../index';
+import { getEventEmoji, EventStatusMeta, getConfirmedTimeOption } from '../../index';
 import type { EventCardProps } from './index';
 
 const RSVP_CHIP: Record<string, { emoji: string; label: string; classes: string }> = {
@@ -16,9 +16,7 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   const meta           = EventStatusMeta[event.status];
   const goingCount     = event.rsvps?.filter((r) => r.status === 'going').length ?? 0;
   const currentRSVP    = event.rsvps?.find((r) => r.userId === currentUserId)?.status;
-  const confirmedTime  = event.confirmedTimeOptionId
-    ? event.votingOptions?.find((o) => o.id === event.confirmedTimeOptionId)
-    : null;
+  const confirmedTime  = getConfirmedTimeOption(event);
 
   const chipRSVP = currentRSVP ? RSVP_CHIP[currentRSVP] : null;
 

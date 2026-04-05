@@ -1,4 +1,10 @@
-import type { EventSuggestion, RSVPStatus, User } from '../types';
+import type { EventSuggestion, RSVPStatus, User, VotingOption } from '../types';
+
+/** Returns the confirmed time option for an event, or null if not confirmed. */
+export function getConfirmedTimeOption(event: EventSuggestion): VotingOption | null {
+  if (!event.confirmedTimeOptionId) return null;
+  return event.votingOptions?.find((o) => o.id === event.confirmedTimeOptionId) ?? null;
+}
 
 /** Count unique voters across all voting options */
 export function getTotalVoters(event: EventSuggestion): number {

@@ -51,6 +51,9 @@ verify_jwt = false
 [functions.lock-event-time]
 verify_jwt = false
 
+[functions.get-event]
+verify_jwt = false
+
 [db]
 # Port to use for the local database URL.
 port = 54322

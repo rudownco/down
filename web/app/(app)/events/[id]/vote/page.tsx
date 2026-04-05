@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { getEventEmoji } from '@down/common';
-import { fetchGroups, fetchEvents } from '@down/common';
+import { getEventEmoji, fetchEventById } from '@down/common';
 import type { EventSuggestion } from '@down/common';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
@@ -20,22 +19,12 @@ export default function VotePage() {
   useEffect(() => {
     if (!user || !id) return;
 
-    (async () => {
-      try {
-        const groups = await fetchGroups(supabase);
-        for (const group of groups) {
-          const events = await fetchEvents(supabase, group.id).catch(() => []);
-          const found = events.find((e) => e.id === id);
-          if (found) {
-            setEvent(found);
-            return;
-          }
-        }
-        setNotFound(true);
-      } catch {
-        setNotFound(true);
-      }
-    })();
+    fetchEventById(supabase, id)
+      .then((found) => {
+        if (found) setEvent(found);
+        else setNotFound(true);
+      })
+      .catch(() => setNotFound(true));
   }, [user, id]);
 
   if (notFound) {

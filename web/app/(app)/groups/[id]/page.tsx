@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Plus, Link2, Check, Copy, X, ChevronRight } from 'lucide-react';
 import { EventCard, AvatarCircle, getGroupEmoji, getMemberCountLabel, hasPermission, getRoleLabel, getAssignableRoles, canManageRole, getRoleRank } from '@down/common';
 import { fetchGroups, fetchEvents, createInvite, removeGroupMember, updateMemberRole, transferOwnership, useGroupMembersRealtime } from '@down/common';
+import { toast } from 'sonner';
 import type { DownGroup, EventSuggestion, GroupMember, GroupRole } from '@down/common';
 import { Button } from '@/components/ui/button';
 import { CreateEventModal } from '@/components/CreateEventModal';
@@ -121,7 +122,7 @@ export default function GroupDetailPage() {
         };
       });
     } catch (e: any) {
-      alert(e?.message ?? 'Could not remove member');
+      toast.error(e?.message ?? 'Could not remove member');
     } finally {
       setRemovingUserId(null);
     }
@@ -144,7 +145,7 @@ export default function GroupDetailPage() {
       );
       setInspectedMember((prev) => prev && prev.id === memberId ? { ...prev, role: newRole } : prev);
     } catch (e: any) {
-      alert(e?.message ?? 'Could not update role');
+      toast.error(e?.message ?? 'Could not update role');
     } finally {
       setRoleUpdating(false);
     }
@@ -173,7 +174,7 @@ export default function GroupDetailPage() {
       });
       setInspectedMember(null);
     } catch (e: any) {
-      alert(e?.message ?? 'Could not transfer ownership');
+      toast.error(e?.message ?? 'Could not transfer ownership');
     } finally {
       setRoleUpdating(false);
     }

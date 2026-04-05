@@ -5,6 +5,7 @@ import { RSVPButtons } from '../RSVPButtons';
 import { Card } from '../Card';
 import { getEventEmoji } from '../../utils/emoji';
 import { EventStatusMeta } from '../../types';
+import { getConfirmedTimeOption } from '../../utils/event';
 import type { EventCardProps } from './index';
 
 const RSVP_CHIP: Record<string, { emoji: string; label: string; bg: string; color: string }> = {
@@ -19,9 +20,7 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   const currentRSVP   = event.rsvps?.find((r) => r.userId === currentUserId)?.status;
   const emoji         = getEventEmoji(event.title);
   const meta          = EventStatusMeta[event.status];
-  const confirmedTime = event.confirmedTimeOptionId
-    ? event.votingOptions?.find((o) => o.id === event.confirmedTimeOptionId)
-    : null;
+  const confirmedTime = getConfirmedTimeOption(event);
   const chipRSVP      = currentRSVP ? RSVP_CHIP[currentRSVP] : null;
 
   let chipBg: string;
