@@ -24,7 +24,10 @@ export interface Group {
 }
 
 // ─── Event ──────────────────────────────────────────────
-export type EventStatus = 'voting' | 'rsvp' | 'confirmed' | 'pending';
+export const EVENT_STATUSES = ['voting', 'rsvp', 'confirmed', 'pending'] as const;
+export type EventStatus = (typeof EVENT_STATUSES)[number];
+
+export const GROUP_ROLES = ['owner', 'admin', 'member', 'initiate'] as const;
 
 export const EventStatusMeta: Record<EventStatus, { label: string; emoji: string }> = {
   voting:    { label: 'Voting',    emoji: '🗳️' },
@@ -59,7 +62,8 @@ export interface VotingOption {
 }
 
 // ─── RSVP ───────────────────────────────────────────────
-export type RSVPStatus = 'going' | 'maybe' | 'not_going';
+export const RSVP_STATUSES = ['going', 'maybe', 'not_going'] as const;
+export type RSVPStatus = (typeof RSVP_STATUSES)[number];
 
 export const RSVPStatusMeta: Record<RSVPStatus, { label: string; emoji: string }> = {
   going:     { label: 'Going',  emoji: 'DOWN' },

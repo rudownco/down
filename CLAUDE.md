@@ -93,6 +93,9 @@ We support **mobile (React Native/Expo)** and **web (Next.js)**.
 
 The `/common` package (`@down/common`) is the source of truth for:
 - **Types** — domain types only (never raw Supabase types like `user_metadata`)
+- **Profiles** — user-facing identity fields are read from `profiles` / domain `User`, not `user_metadata` (see §18)
+- **Permissions** — role → capability maps in `/common/src/utils/permissions.ts`, mirrored to Edge Functions `_shared/permissions.ts` (see §19–20)
+- **Enumerations** — fixed product values as `as const` arrays in common, types derived from them (see §21)
 - **API functions** — all Supabase Edge Function calls
 - **Hooks** — shared React hooks (e.g. `useAuthState`)
 - **Utils** — formatting, emoji, greeting, etc.
@@ -157,7 +160,7 @@ This keeps backend logic platform-agnostic and reusable by both RN and web.
 
 **UI components and pages must only use domain types from `@down/common`, never raw Supabase types.**
 
-- Never pass `user.user_metadata` to a component — map it to a domain `User` first
+- Never pass `user.user_metadata` to a component — map it to a domain `User` first (profile fields come from `profiles`; see §18)
 - Never pass Supabase response shapes directly to UI — map them in the API layer
 - The mapping happens once, in `/common/src/services/api.ts` or `/common/src/hooks/useAuthState.ts`
 - UI components receive clean domain types: `User`, `DownGroup`, `EventSuggestion`, etc.
@@ -349,6 +352,23 @@ alert(e?.message ?? 'Something went wrong');
 
 `<Toaster richColors position="bottom-center" />` is mounted in `web/app/layout.tsx`. For destructive confirmations, build an inline confirmation UI or a shadcn `AlertDialog` — never `window.confirm()`.
 
+### 18. Profiles Are the Source of Truth for User Data ⚠️ CRITICAL
+
+- Names, avatars, and other display fields come from the `profiles` row (joined in queries, mapped to domain `User`). Never treat `auth.users` / `user_metadata` as authoritative for those fields in app code.
+
+### 19. Permissions Are Defined in Common and Mirrored to Edge Functions ⚠️ CRITICAL
+
+- Canonical file: `/common/src/utils/permissions.ts`. Edge Functions must import `../_shared/permissions.ts`, which stays a byte-for-byte mirror of that file (header: `AUTO-GENERATED` — do not hand-edit).
+- After changing permissions in common, update `_shared/permissions.ts` the same way. Never duplicate role maps or permission lists inside a single function or platform package.
+
+### 20. Always Gate Capabilities with `hasPermission()`
+
+- Use `hasPermission(role, permission)` from `@down/common` (clients) or `_shared/permissions.ts` (Edge Functions). Do not infer capabilities from raw role string comparisons (`role === 'admin'`, `['owner','admin'].includes(role)`, etc.) except where the product explicitly means “this exact role,” not “has this permission.”
+
+### 21. Enumerated Business Values Use Shared `const` Arrays ⚠️ CRITICAL
+
+- Statuses, roles, RSVP values, event phases, and similar fixed vocab live in `@down/common` as `as const` arrays (or single maps keyed by those values), with TypeScript types derived from them (`typeof ARR[number]`). No one-off magic strings for the same concept across files.
+
 ---
 
 ## UX & Tone Guidelines
@@ -405,6 +425,9 @@ Auth: Google OAuth (live), Apple OAuth (planned)
 5. **Does this type already exist in `@down/common`?** → Re-export it, never redefine it
 6. **Am I applying an optimistic update?** → Capture prev state and roll back on error
 7. **Is this UI state needed across navigation?** → Put it in a Zustand store, not `useState`
+8. **User display data?** → From `profiles` / domain `User`, not `user_metadata`
+9. **Checking what a role can do?** → `hasPermission()`; if I changed permissions, did I mirror `_shared/permissions.ts`?
+10. **A fixed set of string values (status, phase, etc.)?** → Add or reuse a `const` array in `@down/common`, derive the type from it
 
 ### When generating code:
 - Use clear folder structures matching the project layout above
@@ -439,6 +462,10 @@ If a needed shadcn component doesn't exist yet in `/web/components/ui/`, add it 
 - ❌ Never loop over all groups + `fetchEvents()` to find a single event — use `fetchEventById()`
 - ❌ Never use `window.alert()` or `window.confirm()` on web — use `sonner` toasts and shadcn `AlertDialog`
 - ❌ Never leave optimistic UI updates without a rollback on async failure
+- ❌ Never use `user_metadata` (or auth user fields) as the source of truth for profile display data — use `profiles` / domain `User`
+- ❌ Never edit `backend/supabase/functions/_shared/permissions.ts` by hand or duplicate permission logic outside `/common/src/utils/permissions.ts` + its mirror
+- ❌ Never gate features with ad-hoc role string checks when a `Permission` exists — use `hasPermission()`
+- ❌ Never introduce parallel magic strings for the same enumerated product value — define once in `@down/common` as `const` + derived type
 
 ### When suggesting architecture:
 - Think long-term scalability

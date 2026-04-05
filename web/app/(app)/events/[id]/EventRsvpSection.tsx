@@ -13,11 +13,17 @@ interface Props {
 
 export default function EventRsvpSection({ eventId, currentRsvpStatus }: Props) {
   const [selected, setSelected] = useState<RSVPStatus | undefined>(currentRsvpStatus);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleRsvp(status: RSVPStatus) {
     const prev = selected;
     setSelected(status);
-    await submitRSVP(supabase, eventId, status).catch(() => setSelected(prev));
+    setIsSubmitting(true);
+    try {
+      await submitRSVP(supabase, eventId, status).catch(() => setSelected(prev));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -25,7 +31,7 @@ export default function EventRsvpSection({ eventId, currentRsvpStatus }: Props) 
       <h2 className="text-sm font-heading font-semibold text-on-surface mb-3">
         You pulling up? 👀
       </h2>
-      <RSVPButtons selectedStatus={selected} onSelect={handleRsvp} />
+      <RSVPButtons selectedStatus={selected} onSelect={handleRsvp} disabled={isSubmitting} />
     </section>
   );
 }

@@ -10,6 +10,11 @@
     "dev:web": "npm run dev --workspace=web",
     "dev:mobile": "npm run start --workspace=down",
     "build:web": "npm run build --workspace=web",
-    "build:common": "npm run build --workspace=common"
+    "build:common": "npm run build --workspace=common",
+    "sync:shared": "tsx scripts/sync-permissions.ts",
+    "check:shared": "tsx scripts/sync-permissions.ts --check"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3"
   }
 }

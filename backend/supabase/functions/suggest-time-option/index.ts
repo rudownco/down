@@ -1,4 +1,5 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
+import { hasPermission, type GroupRole } from "../_shared/permissions.ts"
 
 // POST /functions/v1/suggest-time-option
 // Body: { event_id, date, time }
@@ -49,7 +50,7 @@ Deno.serve(async (req: Request) => {
       return err("Not a member of this group", 403)
     }
 
-    if (!["owner", "admin", "member"].includes(membership.role)) {
+    if (!hasPermission(membership.role as GroupRole, "event.suggest_time")) {
       return err("Only members and above can suggest time options", 403)
     }
 
