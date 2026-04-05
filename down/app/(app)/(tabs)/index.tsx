@@ -2,7 +2,7 @@
 // "The Social Sketchbook" aesthetic
 
 import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
@@ -23,8 +23,8 @@ export default function EventHubScreen() {
   const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("active");
 
-  const { groups, loadGroups } = useGroupStore();
-  const { events, loadEvents } = useEventStore();
+  const { groups, loadGroups, isLoading: groupsLoading } = useGroupStore();
+  const { events, loadEvents, isLoading: eventsLoading } = useEventStore();
   const { unreadCount } = useNotificationStore();
 
   const firstName = user?.name.split(" ")[0] ?? "";
@@ -38,6 +38,18 @@ export default function EventHubScreen() {
   useEffect(() => {
     if (firstGroup) loadEvents(firstGroup.id);
   }, [firstGroup?.id]);
+
+  const isBootstrapping =
+    (groupsLoading && groups.length === 0) ||
+    (!!firstGroup && eventsLoading);
+
+  if (isBootstrapping) {
+    return (
+      <View className="flex-1 bg-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#3F6377" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-surface">

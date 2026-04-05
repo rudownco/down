@@ -17,7 +17,7 @@ const BUTTONS: {
   { status: 'not_going', label: 'Flaking',   emoji: '😢', bg: '#E5EFF8', selectedBg: '#FFDAD6', text: '#374955', selectedText: '#93000A' },
 ];
 
-export function RSVPButtons({ selectedStatus, onSelect }: RSVPButtonsProps) {
+export function RSVPButtons({ selectedStatus, onSelect, disabled }: RSVPButtonsProps) {
   return (
     <View style={{ flexDirection: 'row', gap: 8 }}>
       {BUTTONS.map((btn) => {
@@ -25,6 +25,7 @@ export function RSVPButtons({ selectedStatus, onSelect }: RSVPButtonsProps) {
         return (
           <Pressable
             key={btn.status}
+            disabled={disabled}
             onPress={() => onSelect(btn.status)}
             style={{
               flex: 1,
@@ -34,6 +35,7 @@ export function RSVPButtons({ selectedStatus, onSelect }: RSVPButtonsProps) {
               paddingVertical: 12,
               borderRadius: 14,
               backgroundColor: isSelected ? btn.selectedBg : btn.bg,
+              opacity: disabled ? 0.5 : 1,
             }}
           >
             <Text style={{ fontSize: 18 }}>{btn.emoji}</Text>

@@ -5,11 +5,13 @@ import { EventCard, AvatarCircle, getGreeting } from '@down/common';
 import { fetchGroups, fetchEvents } from '@down/common';
 import type { DownGroup, EventSuggestion } from '@down/common';
 import { EventDetailModal } from '@/components/EventDetailModal';
+import { PageLoader } from '@/components/PageLoader';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const [groups, setGroups] = useState<DownGroup[]>([]);
   const [events, setEvents] = useState<EventSuggestion[]>([]);
   const [inspectedEvent, setInspectedEvent] = useState<EventSuggestion | null>(null);
@@ -19,8 +21,12 @@ export default function DashboardPage() {
   const currentUser = user;
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
+    setIsLoading(true);
     fetchGroups(supabase)
       .then(async (g) => {
         setGroups(g);
@@ -34,7 +40,8 @@ export default function DashboardPage() {
         );
         setEvents(allEvents);
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, [user]);
 
   return (
@@ -62,7 +69,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Squad preview */}
-      {groups.length > 0 && (
+      {!isLoading && groups.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
           {groups.map((g) => (
             <a
@@ -86,7 +93,9 @@ export default function DashboardPage() {
         <h2 className="text-sm font-heading font-semibold text-on-surface-variant uppercase tracking-wide mb-3">
           🔥 Active Hangouts
         </h2>
-        {events.length === 0 ? (
+        {isLoading ? (
+          <PageLoader />
+        ) : events.length === 0 ? (
           <div className="flex flex-col items-center py-12 gap-3">
             <span className="text-3xl">🍃</span>
             <p className="font-heading font-semibold text-on-surface">Nothing planned yet</p>

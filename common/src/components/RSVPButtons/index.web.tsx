@@ -10,7 +10,7 @@ const OPTIONS: { status: RSVPStatus; label: string; emoji: string }[] = [
   { status: 'not_going', label: 'Flaking',   emoji: '😢' },
 ];
 
-export function RSVPButtons({ selectedStatus, onSelect, className }: RSVPButtonsProps) {
+export function RSVPButtons({ selectedStatus, onSelect, className, disabled }: RSVPButtonsProps) {
   const [selected, setSelected] = useState<RSVPStatus | undefined>(selectedStatus);
 
   function handleSelect(status: RSVPStatus) {
@@ -23,10 +23,12 @@ export function RSVPButtons({ selectedStatus, onSelect, className }: RSVPButtons
       {OPTIONS.map(({ status, label, emoji }) => (
         <button
           key={status}
+          disabled={disabled}
           onClick={() => handleSelect(status)}
           className={`
             flex items-center gap-1.5 px-4 py-2.5 rounded-button text-sm font-medium
             transition-all border
+            ${disabled ? 'pointer-events-none opacity-50' : ''}
             ${selected === status
               ? 'bg-primary text-on-primary border-primary scale-[1.02] shadow-sm'
               : 'bg-surface-container-lowest text-on-surface border-outline-variant/40 hover:border-primary/40 hover:bg-surface-container-low'

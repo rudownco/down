@@ -1,4 +1,5 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
+import { hasPermission, type GroupRole } from "../_shared/permissions.ts"
 
 // POST /functions/v1/lock-event-time
 // Body: { event_id, time_option_id: string | null }
@@ -48,7 +49,7 @@ Deno.serve(async (req: Request) => {
       return err("Not a member of this group", 403)
     }
 
-    if (!["owner", "admin"].includes(membership.role)) {
+    if (!hasPermission(membership.role as GroupRole, "event.lock_time")) {
       return err("Only admins and owners can lock the event time", 403)
     }
 

@@ -1,10 +1,9 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
+import { RSVP_STATUSES } from "../_shared/constants.ts"
 
 // POST /functions/v1/submit-rsvp
 // Body: { event_id, status: 'going' | 'maybe' | 'not_going' }
 // Upserts the calling user's RSVP for an event. Requires event.rsvp permission (initiate+).
-
-const VALID_STATUSES = ["going", "maybe", "not_going"]
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -17,8 +16,8 @@ Deno.serve(async (req: Request) => {
 
     const { event_id, status } = await req.json()
     if (!event_id?.trim()) return err("event_id is required", 400)
-    if (!status || !VALID_STATUSES.includes(status)) {
-      return err(`status must be one of: ${VALID_STATUSES.join(", ")}`, 400)
+    if (!status || !RSVP_STATUSES.includes(status)) {
+      return err(`status must be one of: ${RSVP_STATUSES.join(", ")}`, 400)
     }
 
     // Fetch the event to get group_id

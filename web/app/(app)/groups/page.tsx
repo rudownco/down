@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Plus, X } from 'lucide-react';
 import { GroupCard } from '@/components/GroupCard';
+import { PageLoader } from '@/components/PageLoader';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { fetchGroups, createGroup, getNotifications } from '@down/common';
@@ -11,6 +12,7 @@ import { useAuth } from '@/components/AuthProvider';
 
 export default function GroupsPage() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const [groups, setGroups] = useState<DownGroup[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
@@ -19,7 +21,12 @@ export default function GroupsPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
     Promise.all([fetchGroups(supabase), getNotifications(supabase)])
       .then(([fetchedGroups, notifs]) => {
         const unreadByGroup: Record<string, number> = {};
@@ -28,7 +35,8 @@ export default function GroupsPage() {
         }
         setGroups(fetchedGroups.map((g) => ({ ...g, unreadCount: unreadByGroup[g.id] ?? 0 })));
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
   }, [user]);
 
   useEffect(() => {
@@ -97,7 +105,9 @@ export default function GroupsPage() {
         </div>
       )}
 
-      {groups.length === 0 && !showCreate ? (
+      {isLoading ? (
+        <PageLoader />
+      ) : groups.length === 0 && !showCreate ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <span className="text-4xl">🫂</span>
           <p className="font-heading font-bold text-on-surface">No squads yet</p>

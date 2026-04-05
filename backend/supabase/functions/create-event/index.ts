@@ -1,4 +1,5 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
+import { hasPermission, type GroupRole } from "../_shared/permissions.ts"
 
 // POST /functions/v1/create-event
 // Body: { group_id, title, description?, location?, time_options?: [{date, time}] }
@@ -32,7 +33,7 @@ Deno.serve(async (req: Request) => {
       return err("Not a member of this group", 403)
     }
 
-    if (!["owner", "admin"].includes(membership.role)) {
+    if (!hasPermission(membership.role as GroupRole, "event.create")) {
       return err("Only admins and owners can create events", 403)
     }
 
