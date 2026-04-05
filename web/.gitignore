@@ -1,6 +1,7 @@
 # Build output
 .next/
 dist/
+*.tsbuildinfo
 
 # Environment
 .env
