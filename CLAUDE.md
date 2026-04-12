@@ -369,6 +369,24 @@ alert(e?.message ?? 'Something went wrong');
 
 - Statuses, roles, RSVP values, event phases, and similar fixed vocab live in `@down/common` as `as const` arrays (or single maps keyed by those values), with TypeScript types derived from them (`typeof ARR[number]`). No one-off magic strings for the same concept across files.
 
+### 22. Themes Swap Colors, Never Structure ⚠️ CRITICAL
+
+Dark mode (and any future theme) must only change color tokens. Component layout, spacing, typography scale, iconography, padding, border radii, and behavior stay **identical** between themes.
+
+If a mockup shows a structural difference between light and dark variants, treat that as a separate design decision — never bundle it into the theme switch. When implementing a dark-mode mockup, extract only the color deltas; ignore layout/component changes that aren't requested explicitly.
+
+```tsx
+// ✅ Correct — same JSX, theme classes swap colors
+<View className="rounded-card-lg bg-surface-container px-5 py-4">
+  <Text className="text-on-surface font-heading-extrabold">{title}</Text>
+</View>
+
+// ❌ Wrong — different layout per theme
+{isDark ? <CompactCard /> : <FullCard />}
+```
+
+**Why:** Mixing structural changes into theme work makes themes impossible to test, doubles QA surface, and silently breaks one variant whenever the other is touched.
+
 ---
 
 ## UX & Tone Guidelines
@@ -466,6 +484,7 @@ If a needed shadcn component doesn't exist yet in `/web/components/ui/`, add it 
 - ❌ Never edit `backend/supabase/functions/_shared/permissions.ts` by hand or duplicate permission logic outside `/common/src/utils/permissions.ts` + its mirror
 - ❌ Never gate features with ad-hoc role string checks when a `Permission` exists — use `hasPermission()`
 - ❌ Never introduce parallel magic strings for the same enumerated product value — define once in `@down/common` as `const` + derived type
+- ❌ Never change component structure, layout, spacing, or iconography between light and dark themes — themes only swap color tokens
 
 ### When suggesting architecture:
 - Think long-term scalability

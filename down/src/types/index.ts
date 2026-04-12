@@ -7,8 +7,9 @@ export type {
   GroupRole,
   EventSuggestion,
   EventStatus,
+  EventCategory,
   VotingOption,
   RSVP,
   RSVPStatus,
 } from '@down/common';
-export { EventStatusMeta, RSVPStatusMeta } from '@down/common';
+export { EventStatusMeta, EventCategoryMeta, RSVPStatusMeta } from '@down/common';

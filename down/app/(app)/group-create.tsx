@@ -5,7 +5,14 @@ import React, { useState } from "react";
 import { View, Text, ScrollView, Alert, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SketchCard, FilledInput, JellybeanChip, FriendSelectionGrid, BouncyButton, SectionLabel } from "../../components";
+import {
+  SketchCard,
+  FilledInput,
+  JellybeanChip,
+  FriendSelectionGrid,
+  BouncyButton,
+  SectionLabel,
+} from "../../components";
 import * as api from "../../src/services/api";
 import { useGroupStore } from "../../src/stores/groupStore";
 
@@ -22,7 +29,9 @@ export default function CreateGroupScreen() {
   const { addGroup } = useGroupStore();
   const [groupName, setGroupName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-  const [selectedFriends, setSelectedFriends] = useState<Set<string>>(new Set());
+  const [selectedFriends, setSelectedFriends] = useState<Set<string>>(
+    new Set(),
+  );
 
   const canCreate = groupName.trim().length > 0;
 
@@ -94,7 +103,10 @@ export default function CreateGroupScreen() {
                 placeholder="The Clique..."
                 value={groupName}
                 onChangeText={setGroupName}
-                style={{ fontFamily: "PlusJakartaSans_600SemiBold", fontSize: 18 }}
+                style={{
+                  fontFamily: "PlusJakartaSans_600SemiBold",
+                  fontSize: 18,
+                }}
               />
             </View>
           </View>
@@ -152,10 +164,7 @@ export default function CreateGroupScreen() {
       </ScrollView>
 
       {/* Fixed bottom CTA */}
-      <View
-        className="absolute bottom-0 left-0 right-0 p-6 bg-surface-container-lowest/80"
-        style={{ backdropFilter: "blur(24px)" }}
-      >
+      <View className="absolute bottom-0 left-0 right-0 p-6 bg-surface-container-lowest/80">
         <BouncyButton
           title="Create Squad"
           icon="rocket-outline"

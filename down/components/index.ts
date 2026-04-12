@@ -5,6 +5,8 @@ export { BottomTabBar } from './BottomTabBar';
 export { BouncyButton } from './BouncyButton';
 export { CategoryPill } from './CategoryPill';
 export { EventCardNew } from './EventCardNew';
+export { StandardEventCard } from './StandardEventCard';
+export { VotingEventCard } from './VotingEventCard';
 export { FilledInput } from './FilledInput';
 export { FloatingActionButton } from './FloatingActionButton';
 export { FriendSelectionGrid } from './FriendSelectionGrid';

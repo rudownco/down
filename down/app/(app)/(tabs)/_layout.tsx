@@ -1,33 +1,18 @@
 // Tab layout with custom bottom tab bar
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text, Pressable } from "react-native";
 import { useEffect } from "react";
-import { cn } from "../../../lib/utils";
 import { useAuth } from "../../../src/context/AuthContext";
+import { useTheme } from "../../../src/context/ThemeContext";
+import { useThemeColors } from "../../../src/hooks/useThemeColors";
 import { supabase } from "../../../src/services/supabase";
 import { useNotificationsRealtime } from "@down/common";
 import { useNotificationStore } from "../../../src/stores/notificationStore";
 
-function TabBarIcon({
-  name,
-  focused,
-}: {
-  name: keyof typeof Ionicons.glyphMap;
-  focused: boolean;
-}) {
-  return (
-    <Ionicons
-      name={name}
-      size={22}
-      color={focused ? "#3F6377" : "#76574E"}
-      style={{ opacity: focused ? 1 : 0.6 }}
-    />
-  );
-}
-
 export default function TabsLayout() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
+  const tc = useThemeColors();
   const { unreadCount, loadUnread, incrementGroup } = useNotificationStore();
 
   useEffect(() => {
@@ -44,21 +29,21 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: "rgba(255,255,255,0.9)",
+          backgroundColor: isDark ? "rgba(16,20,24,0.95)" : "rgba(255,255,255,0.9)",
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           borderTopWidth: 0,
           height: 80,
           paddingTop: 8,
-          shadowColor: "#131D23",
+          shadowColor: tc.onSurface,
           shadowOffset: { width: 0, height: -8 },
           shadowOpacity: 0.06,
           shadowRadius: 32,
           elevation: 12,
           position: "absolute",
         },
-        tabBarActiveTintColor: "#3F6377",
-        tabBarInactiveTintColor: "#76574E",
+        tabBarActiveTintColor: tc.primary,
+        tabBarInactiveTintColor: tc.tertiary,
         tabBarLabelStyle: {
           fontFamily: "BeVietnamPro_500Medium",
           fontSize: 10,
@@ -72,7 +57,12 @@ export default function TabsLayout() {
         options={{
           title: "Events",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? "sparkles" : "sparkles-outline"} focused={focused} />
+            <Ionicons
+              name={focused ? "sparkles" : "sparkles-outline"}
+              size={22}
+              color={focused ? tc.primary : tc.tertiary}
+              style={{ opacity: focused ? 1 : 0.6 }}
+            />
           ),
         }}
       />
@@ -81,7 +71,12 @@ export default function TabsLayout() {
         options={{
           title: "Groups",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? "people" : "people-outline"} focused={focused} />
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={22}
+              color={focused ? tc.primary : tc.tertiary}
+              style={{ opacity: focused ? 1 : 0.6 }}
+            />
           ),
           tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
         }}
@@ -91,7 +86,12 @@ export default function TabsLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon name={focused ? "person" : "person-outline"} focused={focused} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={focused ? tc.primary : tc.tertiary}
+              style={{ opacity: focused ? 1 : 0.6 }}
+            />
           ),
         }}
       />
