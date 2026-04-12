@@ -5,6 +5,7 @@ export interface ButtonProps {
   fullWidth?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  iconRight?: React.ReactNode;
   className?: string;
 }
 

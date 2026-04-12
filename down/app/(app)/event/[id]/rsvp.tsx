@@ -102,6 +102,7 @@ export default function RSVPScreen() {
             are you down?
           </Text>
           <RSVPButtonRow
+            eventId={event.id}
             selectedStatus={selectedStatus}
             onSelect={setSelectedStatus}
           />

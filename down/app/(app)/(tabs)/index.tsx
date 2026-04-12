@@ -1,16 +1,18 @@
 // Event Hub — main dashboard matching Stitch export3
 // "The Social Sketchbook" aesthetic
 
-import React, { useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
 import { useAuth } from "../../../src/context/AuthContext";
-import { getGreeting } from "../../../src/utils/greeting";
+import { useThemeColors } from "../../../src/hooks/useThemeColors";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useEventStore } from "../../../src/stores/eventStore";
 import { useNotificationStore } from "../../../src/stores/notificationStore";
+import * as api from "../../../src/services/api";
+import type { EventSuggestion, RSVPStatus } from "../../../src/types";
 
 const FILTERS = [
   { label: "🔥 active now", key: "active" },
@@ -21,10 +23,12 @@ const FILTERS = [
 export default function EventHubScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const tc = useThemeColors();
   const [activeFilter, setActiveFilter] = useState("active");
 
   const { groups, loadGroups, isLoading: groupsLoading } = useGroupStore();
-  const { events, loadEvents, isLoading: eventsLoading } = useEventStore();
+  const { events, loadEvents, updateEvent, isLoading: eventsLoading } =
+    useEventStore();
   const { unreadCount } = useNotificationStore();
 
   const firstName = user?.name.split(" ")[0] ?? "";
@@ -43,10 +47,52 @@ export default function EventHubScreen() {
     (groupsLoading && groups.length === 0) ||
     (!!firstGroup && eventsLoading);
 
+  const handleHubRsvp = useCallback(
+    (event: EventSuggestion) => (status: RSVPStatus) => {
+      if (!user) return;
+      const prev =
+        useEventStore.getState().events.find((e) => e.id === event.id) ??
+        event;
+      const optimistic = {
+        id: `optimistic-${event.id}-${user.id}`,
+        userId: user.id,
+        eventId: event.id,
+        status,
+        updatedAt: new Date().toISOString(),
+      };
+      const nextRsvps = [
+        ...(prev.rsvps ?? []).filter((r) => r.userId !== user.id),
+        optimistic,
+      ];
+      updateEvent({ ...prev, rsvps: nextRsvps });
+
+      void api
+        .submitRSVP(event.id, status)
+        .then((rsvp) => {
+          const latest =
+            useEventStore.getState().events.find((e) => e.id === event.id) ??
+            prev;
+          const merged = [
+            ...(latest.rsvps ?? []).filter((r) => r.userId !== user.id),
+            rsvp,
+          ];
+          updateEvent({ ...latest, rsvps: merged });
+        })
+        .catch((e: unknown) => {
+          updateEvent(prev);
+          Alert.alert(
+            "Error",
+            e instanceof Error ? e.message : "Could not update RSVP"
+          );
+        });
+    },
+    [updateEvent, user]
+  );
+
   if (isBootstrapping) {
     return (
       <View className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#3F6377" />
+        <ActivityIndicator size="large" color={tc.primary} />
       </View>
     );
   }
@@ -66,7 +112,7 @@ export default function EventHubScreen() {
             className="relative"
             hitSlop={8}
           >
-            <Ionicons name="notifications-outline" size={24} color="#3F6377" />
+            <Ionicons name="notifications-outline" size={24} color={tc.primary} />
             {unreadCount > 0 && (
               <View className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-primary items-center justify-center">
                 <Text className="text-on-primary text-[9px] font-bold leading-none">
@@ -86,7 +132,7 @@ export default function EventHubScreen() {
         {/* Greeting */}
         <View className="px-6 mt-4 mb-6">
           <Text className="font-label text-sm text-tertiary uppercase tracking-widest">
-            {getGreeting()}, {firstName}!
+            welcome back, {firstName}!
           </Text>
           <Text className="font-heading-extrabold text-4xl text-primary leading-tight mt-1">
             the hub.
@@ -111,23 +157,6 @@ export default function EventHubScreen() {
           ))}
         </ScrollView>
 
-        {/* Squad pill */}
-        {firstGroup && (
-          <View className="px-6 mb-2">
-            <View className="flex-row items-center gap-3 bg-surface-container-lowest rounded-card p-4"
-              style={{ shadowColor: "#131D23", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 16, elevation: 2 }}
-            >
-              <Text className="text-2xl">👥</Text>
-              <View className="flex-1">
-                <Text className="font-heading text-base text-on-surface">{firstGroup.name}</Text>
-                <Text className="font-body text-xs text-on-surface-variant">
-                  {firstGroup.memberCount ?? 0} members · {firstGroup.lastActivity}
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
-
         {/* Event cards */}
         <View className="px-6 gap-8">
           {events.map((event) => (
@@ -143,15 +172,20 @@ export default function EventHubScreen() {
                   params: { id: event.id },
                 })
               }
-              onRSVP={(_status) => {}}
+              onRSVP={handleHubRsvp(event)}
             />
           ))}
         </View>
       </ScrollView>
 
-      {/* FAB */}
+      {/* FAB — Create Event */}
       <FloatingActionButton
-        onPress={() => router.push("/(app)/group-create")}
+        onPress={() => {
+          router.push({
+            pathname: "/(app)/event/create",
+            params: firstGroup ? { groupId: firstGroup.id } : {},
+          });
+        }}
         icon="add"
       />
     </View>

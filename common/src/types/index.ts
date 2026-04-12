@@ -27,6 +27,27 @@ export interface Group {
 export const EVENT_STATUSES = ['voting', 'rsvp', 'confirmed', 'pending'] as const;
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
+export const EVENT_CATEGORIES = ['Food', 'Drinks', 'Movie', 'Touching Grass', 'Games'] as const;
+export type EventCategory = (typeof EVENT_CATEGORIES)[number];
+
+export const EventCategoryMeta: Record<EventCategory, { emoji: string; label: string }> = {
+  Food:            { emoji: '🍔', label: 'Food' },
+  Drinks:          { emoji: '🍹', label: 'Drinks' },
+  Movie:           { emoji: '🍿', label: 'Movie' },
+  'Touching Grass': { emoji: '🌳', label: 'Touching Grass' },
+  Games:           { emoji: '🎮', label: 'Games' },
+};
+
+export const DRESS_CODES = ['Chill / Casual', 'Fancy / Dressy', 'Themed', 'Active'] as const;
+export type DressCode = (typeof DRESS_CODES)[number];
+
+export const DressCodeMeta: Record<DressCode, { emoji: string; label: string }> = {
+  'Chill / Casual': { emoji: '👕', label: 'Chill / Casual' },
+  'Fancy / Dressy': { emoji: '✨', label: 'Fancy / Dressy' },
+  Themed:           { emoji: '🎭', label: 'Themed' },
+  Active:           { emoji: '👟', label: 'Active' },
+};
+
 export const GROUP_ROLES = ['owner', 'admin', 'member', 'initiate'] as const;
 
 export const EventStatusMeta: Record<EventStatus, { label: string; emoji: string }> = {
@@ -48,6 +69,9 @@ export interface EventSuggestion {
   suggestedBy: User;
   votingOptions: VotingOption[];
   rsvps: RSVP[];
+  category?: EventCategory;
+  dressCode?: DressCode;
+  dressCodeNote?: string;
   confirmedTimeOptionId?: string; // set when transitioning from voting → rsvp
   votingEndsAt?: string;           // ISO timestamp; triggers auto-transition when passed
 }
@@ -85,6 +109,9 @@ export interface CreateEventInput {
   title: string;
   description?: string;
   location?: string;
+  category?: string;
+  dress_code?: DressCode;
+  dress_code_note?: string;
   group_id: string;
   time_options?: Array<{ date: string; time: string }>;
   voting_ends_at?: string; // ISO timestamp for when voting closes automatically

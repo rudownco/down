@@ -1,9 +1,15 @@
 import React, { useRef } from "react";
-import { Pressable, Text, Animated, ActivityIndicator, View } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import {
+  Pressable,
+  Text,
+  Animated,
+  ActivityIndicator,
+  View,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { cn } from "../lib/utils";
 import { bouncyPressConfig, bouncyReleaseConfig } from "../lib/animations";
+import { useThemeColors, type ResolvedColors } from "../src/hooks/useThemeColors";
 
 interface BouncyButtonProps {
   title: string;
@@ -16,6 +22,16 @@ interface BouncyButtonProps {
   className?: string;
 }
 
+function getVariants(tc: ResolvedColors) {
+  return {
+    primary: { bg: tc.primary, text: tc.onPrimary },
+    secondary: { bg: tc.primaryContainer, text: tc.onPrimaryContainer },
+    outline: { bg: "transparent", text: tc.primary, border: tc.outlineVariant },
+    ghost: { bg: "transparent", text: tc.primary },
+    danger: { bg: tc.error, text: tc.onError },
+  } as const;
+}
+
 export function BouncyButton({
   title,
   onPress,
@@ -26,7 +42,10 @@ export function BouncyButton({
   icon,
   className,
 }: BouncyButtonProps) {
+  const tc = useThemeColors();
   const scale = useRef(new Animated.Value(1)).current;
+  const variants = getVariants(tc);
+  const v = variants[variant];
 
   const handlePressIn = () => {
     if (!disabled) Animated.timing(scale, bouncyPressConfig).start();
@@ -35,36 +54,6 @@ export function BouncyButton({
   const handlePressOut = () => {
     Animated.timing(scale, bouncyReleaseConfig).start();
   };
-
-  const content = (
-    <View className="flex-row items-center justify-center gap-2.5">
-      {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#FFFFFF" : "#3F6377"} />
-      ) : (
-        <>
-          {icon && (
-            <Ionicons
-              name={icon}
-              size={20}
-              color={variant === "primary" || variant === "danger" ? "#FFFFFF" : "#3F6377"}
-            />
-          )}
-          <Text
-            className={cn(
-              "font-heading text-base",
-              variant === "primary" && "text-on-primary",
-              variant === "secondary" && "text-primary",
-              variant === "outline" && "text-primary",
-              variant === "ghost" && "text-primary",
-              variant === "danger" && "text-on-error"
-            )}
-          >
-            {title}
-          </Text>
-        </>
-      )}
-    </View>
-  );
 
   return (
     <Animated.View
@@ -78,33 +67,47 @@ export function BouncyButton({
         disabled={disabled || loading}
         className={cn(className)}
       >
-        {variant === "primary" ? (
-          <LinearGradient
-            colors={["#3F6377", "#4A7A92"]}
-            className="rounded-button py-4 px-6 items-center justify-center"
-            style={{
-              shadowColor: "#3F6377",
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.3,
-              shadowRadius: 16,
-              elevation: 8,
-            }}
-          >
-            {content}
-          </LinearGradient>
-        ) : (
-          <View
-            className={cn(
-              "rounded-button py-4 px-6 items-center justify-center",
-              variant === "secondary" && "bg-primary-container",
-              variant === "outline" && "bg-transparent border-2 border-outline-variant",
-              variant === "ghost" && "bg-transparent",
-              variant === "danger" && "bg-error"
-            )}
-          >
-            {content}
-          </View>
-        )}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            borderRadius: 9999,
+            paddingVertical: 18,
+            paddingHorizontal: 28,
+            backgroundColor: v.bg,
+            borderWidth: "border" in v ? 2 : 0,
+            borderColor: "border" in v ? v.border : "transparent",
+            shadowColor: variant === "primary" ? v.bg : "transparent",
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: variant === "primary" ? 0.25 : 0,
+            shadowRadius: 16,
+            elevation: variant === "primary" ? 6 : 0,
+          }}
+        >
+          {loading ? (
+            <ActivityIndicator color={v.text} />
+          ) : (
+            <>
+              {icon && (
+                <Ionicons name={icon} size={20} color={v.text} />
+              )}
+              <Text
+                style={{
+                  fontFamily: "PlusJakartaSans_700Bold",
+                  fontSize: 16,
+                  color: v.text,
+                }}
+              >
+                {title}
+              </Text>
+              {variant === "primary" && !icon && (
+                <Ionicons name="chevron-forward" size={18} color={v.text} />
+              )}
+            </>
+          )}
+        </View>
       </Pressable>
     </Animated.View>
   );

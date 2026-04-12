@@ -17,6 +17,11 @@ export function getTotalVoters(event: EventSuggestion): number {
   return voterIds.size;
 }
 
+/** Sum of votes across all voting options */
+export function getTotalVotes(event: EventSuggestion): number {
+  return event.votingOptions.reduce((sum, o) => sum + o.votes, 0);
+}
+
 /** Get maximum votes among all options */
 export function getMaxVotes(event: EventSuggestion): number {
   return Math.max(0, ...event.votingOptions.map((o) => o.votes));

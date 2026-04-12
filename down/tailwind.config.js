@@ -1,4 +1,8 @@
 /** @type {import('tailwindcss').Config} */
+
+// Helper: reference a CSS variable as an rgb() color with opacity support
+const v = (name) => `rgb(var(--color-${name}) / <alpha-value>)`;
+
 module.exports = {
   darkMode: "class",
   content: [
@@ -13,85 +17,85 @@ module.exports = {
       colors: {
         // MD3 Primary
         primary: {
-          DEFAULT: "#3F6377",
-          container: "#C4E7FF",
-          fixed: "#C4E7FF",
-          "fixed-dim": "#A7CBE3",
+          DEFAULT: v("primary"),
+          container: v("primary-container"),
+          fixed: v("primary-fixed"),
+          "fixed-dim": v("primary-fixed-dim"),
         },
-        "on-primary": "#FFFFFF",
-        "on-primary-container": "#274B5F",
-        "on-primary-fixed": "#001E2D",
+        "on-primary": v("on-primary"),
+        "on-primary-container": v("on-primary-container"),
+        "on-primary-fixed": v("on-primary-fixed"),
 
         // MD3 Secondary
         secondary: {
-          DEFAULT: "#3E6842",
-          container: "#BFEFBF",
-          fixed: "#BFEFBF",
-          "fixed-dim": "#A4D2A4",
+          DEFAULT: v("secondary"),
+          container: v("secondary-container"),
+          fixed: v("secondary-fixed"),
+          "fixed-dim": v("secondary-fixed-dim"),
         },
-        "on-secondary": "#FFFFFF",
-        "on-secondary-container": "#264F2C",
+        "on-secondary": v("on-secondary"),
+        "on-secondary-container": v("on-secondary-container"),
 
         // MD3 Tertiary
         tertiary: {
-          DEFAULT: "#76574E",
-          container: "#FFDBD0",
-          fixed: "#FFDBD0",
-          "fixed-dim": "#E6BEB2",
+          DEFAULT: v("tertiary"),
+          container: v("tertiary-container"),
+          fixed: v("tertiary-fixed"),
+          "fixed-dim": v("tertiary-fixed-dim"),
         },
-        "on-tertiary": "#FFFFFF",
-        "on-tertiary-container": "#5D4037",
+        "on-tertiary": v("on-tertiary"),
+        "on-tertiary-container": v("on-tertiary-container"),
 
         // MD3 Surface system
         surface: {
-          DEFAULT: "#F5FAFF",
-          dim: "#D1DBE4",
-          bright: "#F5FAFF",
-          tint: "#3F6377",
-          "container-lowest": "#FFFFFF",
-          "container-low": "#EBF5FD",
-          container: "#E5EFF8",
-          "container-high": "#E0E9F2",
-          "container-highest": "#DAE4EC",
+          DEFAULT: v("surface"),
+          dim: v("surface-dim"),
+          bright: v("surface-bright"),
+          tint: v("surface-tint"),
+          "container-lowest": v("surface-container-lowest"),
+          "container-low": v("surface-container-low"),
+          container: v("surface-container"),
+          "container-high": v("surface-container-high"),
+          "container-highest": v("surface-container-highest"),
         },
-        "on-surface": "#131D23",
-        "on-surface-variant": "#374955",
-        "surface-variant": "#DAE4EC",
+        "on-surface": v("on-surface"),
+        "on-surface-variant": v("on-surface-variant"),
+        "surface-variant": v("surface-variant"),
 
         // MD3 Outline
         outline: {
-          DEFAULT: "#677A86",
-          variant: "#B6C9D7",
+          DEFAULT: v("outline"),
+          variant: v("outline-variant"),
         },
 
         // MD3 Error
         error: {
-          DEFAULT: "#BA1A1A",
-          container: "#FFDAD6",
+          DEFAULT: v("error"),
+          container: v("error-container"),
         },
-        "on-error": "#FFFFFF",
-        "on-error-container": "#93000A",
+        "on-error": v("on-error"),
+        "on-error-container": v("on-error-container"),
 
         // MD3 Inverse
-        "inverse-surface": "#283238",
-        "inverse-on-surface": "#E8F2FA",
-        "inverse-primary": "#A7CBE3",
+        "inverse-surface": v("inverse-surface"),
+        "inverse-on-surface": v("inverse-on-surface"),
+        "inverse-primary": v("inverse-primary"),
 
         // Background alias
-        background: "#F5FAFF",
-        "on-background": "#131D23",
+        background: v("background"),
+        "on-background": v("on-background"),
 
         // Scrim
-        scrim: "#000000",
+        scrim: v("scrim"),
 
         // Status colors
         status: {
-          voting: { fg: "#D17D04", bg: "#FFEFC7" },
-          confirmed: { fg: "#1AA04F", bg: "#D8F8E7" },
-          pending: { fg: "#7D859E", bg: "#EEEFF5" },
+          voting: { fg: v("status-voting-fg"), bg: v("status-voting-bg") },
+          confirmed: { fg: v("status-confirmed-fg"), bg: v("status-confirmed-bg") },
+          pending: { fg: v("status-pending-fg"), bg: v("status-pending-bg") },
         },
 
-        // Avatar palette
+        // Avatar palette (same in light & dark — vibrant colors)
         avatar: {
           red: "#FE6B6B",
           teal: "#4ECDC4",
@@ -103,17 +107,17 @@ module.exports = {
           pink: "#FE7FA3",
         },
 
-        // Category pill accent colors (from Stitch export2)
-        "pill-food": "#FFEBB7",
-        "pill-food-text": "#76574E",
-        "pill-drinks": "#E2F0D9",
-        "pill-drinks-text": "#3E6842",
-        "pill-movie": "#F3E5F5",
-        "pill-movie-text": "#6A1B9A",
-        "pill-outdoor": "#E0F7FA",
-        "pill-outdoor-text": "#006064",
-        "pill-games": "#FFF9C4",
-        "pill-games-text": "#F9A825",
+        // Category pill accent colors
+        "pill-food": v("pill-food"),
+        "pill-food-text": v("pill-food-text"),
+        "pill-drinks": v("pill-drinks"),
+        "pill-drinks-text": v("pill-drinks-text"),
+        "pill-movie": v("pill-movie"),
+        "pill-movie-text": v("pill-movie-text"),
+        "pill-outdoor": v("pill-outdoor"),
+        "pill-outdoor-text": v("pill-outdoor-text"),
+        "pill-games": v("pill-games"),
+        "pill-games-text": v("pill-games-text"),
       },
       fontFamily: {
         heading: ["PlusJakartaSans_700Bold"],

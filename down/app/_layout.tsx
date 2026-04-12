@@ -2,10 +2,8 @@
 
 import "../global.css";
 
-import { StyleSheet } from "react-native";
+import { View } from "react-native";
 import { useEffect } from "react";
-
-StyleSheet.setFlag?.("darkMode", "class");
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
@@ -20,10 +18,13 @@ import {
   BeVietnamPro_600SemiBold,
 } from "@expo-google-fonts/be-vietnam-pro";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
+import { ThemeProvider, useTheme } from "../src/context/ThemeContext";
+import { darkThemeVars } from "../src/theme/themeVars";
 import { pendingInvite } from "../src/utils/pendingInvite";
 
 function RootLayoutNav() {
   const { session, isLoading } = useAuth();
+  const { isDark } = useTheme();
   const [fontsLoaded] = useFonts({
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
@@ -52,32 +53,34 @@ function RootLayoutNav() {
 
   if (!fontsLoaded || isLoading) {
     return (
-      <>
-        <StatusBar style="dark" />
+      <View style={isDark ? darkThemeVars : undefined} className="flex-1">
+        <StatusBar style={isDark ? "light" : "dark"} />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="loading" />
         </Stack>
-      </>
+      </View>
     );
   }
 
   return (
-    <>
-      <StatusBar style="dark" />
+    <View style={isDark ? darkThemeVars : undefined} className="flex-1">
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
         <Stack.Screen name="invite" />
       </Stack>
-    </>
+    </View>
   );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

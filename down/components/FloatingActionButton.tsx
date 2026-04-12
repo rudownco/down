@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import { Pressable, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { bouncyPressConfig, bouncyReleaseConfig } from "../lib/animations";
+import { useThemeColors } from "../src/hooks/useThemeColors";
 
 interface FloatingActionButtonProps {
   onPress: () => void;
@@ -12,6 +13,7 @@ export function FloatingActionButton({
   onPress,
   icon = "add",
 }: FloatingActionButtonProps) {
+  const tc = useThemeColors();
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -29,7 +31,7 @@ export function FloatingActionButton({
         right: 24,
         bottom: 100,
         transform: [{ scale }],
-        shadowColor: "#3F6377",
+        shadowColor: tc.primary,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.35,
         shadowRadius: 16,
@@ -43,7 +45,7 @@ export function FloatingActionButton({
         onPressOut={handlePressOut}
         className="w-16 h-16 rounded-full bg-primary items-center justify-center"
       >
-        <Ionicons name={icon} size={28} color="#FFFFFF" />
+        <Ionicons name={icon} size={28} color={tc.onPrimary} />
       </Pressable>
     </Animated.View>
   );

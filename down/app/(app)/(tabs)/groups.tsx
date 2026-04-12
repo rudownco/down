@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,94 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SketchCard, AvatarStack, FloatingActionButton, FilledInput } from "../../../components";
 import { useGroupStore } from "../../../src/stores/groupStore";
 import { useNotificationStore } from "../../../src/stores/notificationStore";
+import { useThemeColors } from "../../../src/hooks/useThemeColors";
+import { getGroupEmoji } from "@down/common";
+import { randomTilt } from "../../../lib/animations";
+import type { DownGroup } from "../../../src/types";
+
+/** Deterministic icon bg color from group name */
+const ICON_BG_COLORS = [
+  "bg-secondary-container",
+  "bg-primary-container",
+  "bg-tertiary-container",
+] as const;
+
+function getIconBg(name: string): string {
+  let hash = 5381;
+  for (let i = 0; i < name.length; i++) hash = (hash * 33) ^ name.charCodeAt(i);
+  return ICON_BG_COLORS[Math.abs(hash) % ICON_BG_COLORS.length];
+}
+
+function GroupCard({ group, hasUnread }: { group: DownGroup; hasUnread: boolean }) {
+  const router = useRouter();
+  const tc = useThemeColors();
+  const tilt = useMemo(() => randomTilt(1.2), []);
+
+  return (
+    <Pressable
+      onPress={() =>
+        router.push({ pathname: "/(app)/group/[id]", params: { id: group.id } })
+      }
+    >
+      <SketchCard tilt={tilt} className="gap-4">
+        {/* Top row: icon + info + status badge */}
+        <View className="flex-row items-start justify-between">
+          <View className="flex-row items-center gap-3 flex-1">
+            {/* Group icon */}
+            <View
+              className={`w-14 h-14 rounded-full items-center justify-center ${getIconBg(group.name)}`}
+            >
+              <Text className="text-2xl">{getGroupEmoji(group.name)}</Text>
+            </View>
+
+            {/* Name + member avatars */}
+            <View className="flex-1 gap-1">
+              <Text className="font-heading text-lg text-on-surface">
+                {group.name}
+              </Text>
+              {group.members.length > 0 && (
+                <AvatarStack
+                  users={group.members}
+                  maxVisible={3}
+                  size="xs"
+                  borderColor={tc.surfaceContainerLowest}
+                />
+              )}
+            </View>
+          </View>
+
+          {/* Unread / activity badge */}
+          {hasUnread && (
+            <View className="bg-primary px-3 py-1 rounded-chip flex-row items-center gap-1">
+              <View className="w-1.5 h-1.5 rounded-full bg-on-primary" />
+              <Text className="font-heading text-[10px] text-on-primary uppercase tracking-wider">
+                Active
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Footer: last activity + chevron */}
+        <View className="pt-3 border-t border-surface-variant flex-row items-center justify-between">
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="time-outline" size={14} color={tc.outline} />
+            <Text className="font-body text-sm text-outline">
+              {group.lastActivity}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={tc.primary} />
+        </View>
+      </SketchCard>
+    </Pressable>
+  );
+}
 
 export default function GroupsTab() {
   const router = useRouter();
+  const tc = useThemeColors();
   const { groups, isLoading, error, loadGroups } = useGroupStore();
   const { unreadGroupIds } = useNotificationStore();
 
@@ -24,7 +107,7 @@ export default function GroupsTab() {
   if (isLoading && groups.length === 0) {
     return (
       <View className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#3F6377" />
+        <ActivityIndicator size="large" color={tc.primary} />
       </View>
     );
   }
@@ -33,14 +116,14 @@ export default function GroupsTab() {
     <View className="flex-1 bg-surface">
       {/* Header */}
       <View className="pt-14 px-6 pb-4 flex-row justify-between items-center">
-        <Text className="font-heading-extrabold text-3xl text-primary italic tracking-tighter -rotate-1">
-          squads
+        <Text className="font-heading-extrabold text-2xl text-primary tracking-tight">
+          my squads
         </Text>
         <Pressable
           onPress={() => router.push("/(app)/group-create")}
-          className="w-10 h-10 rounded-full bg-primary items-center justify-center"
+          hitSlop={8}
         >
-          <Ionicons name="add" size={22} color="#fff" />
+          <Ionicons name="add-circle" size={30} color={tc.primary} />
         </Pressable>
       </View>
 
@@ -50,11 +133,19 @@ export default function GroupsTab() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 16 }}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={loadGroups} />
         }
       >
+        {/* Section header */}
+        <View className="flex-row items-baseline justify-between mt-2">
+          <Text className="font-heading text-xl text-primary tracking-tight">
+            your people
+          </Text>
+          <Text className="font-label text-sm text-tertiary">squad goals</Text>
+        </View>
+
         {groups.length === 0 ? (
           <View className="flex-1 items-center justify-center pt-24 gap-4">
             <Text className="text-5xl">👥</Text>
@@ -62,44 +153,31 @@ export default function GroupsTab() {
             <Text className="font-body text-sm text-on-surface-variant text-center">
               create one and get your crew together
             </Text>
-            <Pressable
-              onPress={() => router.push("/(app)/group-create")}
-              className="mt-2 bg-primary px-6 py-3 rounded-button"
-            >
-              <Text className="font-heading text-white text-base">Create a squad</Text>
-            </Pressable>
           </View>
         ) : (
           groups.map((group) => (
-            <Pressable
+            <GroupCard
               key={group.id}
-              onPress={() => router.push({ pathname: "/(app)/group/[id]", params: { id: group.id } })}
-              className="bg-surface-container-lowest rounded-card p-4 flex-row items-center gap-4"
-              style={{
-                shadowColor: "#131D23",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.05,
-                shadowRadius: 12,
-                elevation: 2,
-              }}
-            >
-              <View className="w-12 h-12 rounded-full bg-primary-container items-center justify-center">
-                <Text className="text-xl">👥</Text>
-              </View>
-              <View className="flex-1">
-                <Text className="font-heading text-base text-on-surface">{group.name}</Text>
-                <Text className="font-body text-xs text-on-surface-variant">
-                  {group.memberCount ?? group.members.length} members · {group.lastActivity}
-                </Text>
-              </View>
-              {unreadGroupIds.includes(group.id) && (
-                <View className="w-2.5 h-2.5 rounded-full bg-primary mr-1" />
-              )}
-              <Ionicons name="chevron-forward" size={18} color="#677A86" />
-            </Pressable>
+              group={group}
+              hasUnread={unreadGroupIds.includes(group.id)}
+            />
           ))
         )}
+
+        {/* Empty state footer */}
+        <View className="py-12 items-center gap-2">
+          <Ionicons name="brush-outline" size={48} color="rgba(63,99,119,0.1)" />
+          <Text className="font-label text-sm text-tertiary opacity-60">
+            more squads coming soon...
+          </Text>
+        </View>
       </ScrollView>
+
+      {/* FAB — Create Squad */}
+      <FloatingActionButton
+        onPress={() => router.push("/(app)/group-create")}
+        icon="rocket-outline"
+      />
     </View>
   );
 }
