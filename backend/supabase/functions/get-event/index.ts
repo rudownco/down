@@ -1,4 +1,5 @@
 import { getUser, createServiceClient, err, ok, corsHeaders } from "../_shared/auth.ts"
+import { mapEdgeEventToDto } from "../_shared/event-dto.ts"
 
 // POST /functions/v1/get-event
 // Body: { event_id }
@@ -54,59 +55,10 @@ Deno.serve(async (req: Request) => {
       return err("Not a member of this group", 403)
     }
 
-    return ok(mapEvent(event))
+    return ok(mapEdgeEventToDto(event))
   } catch (e) {
     console.error("[get-event] error:", e)
     const message = e instanceof Error ? e.message : String(e)
     return err(message, message === "Unauthorized" ? 401 : 500)
   }
 })
-
-function mapEvent(e: any) {
-  const rsvps = (e.rsvps ?? []).map((r: any) => ({
-    id: r.id,
-    userId: r.user_id,
-    eventId: e.id,
-    status: r.status,
-    updatedAt: r.updated_at,
-  }))
-
-  const attendees = (e.rsvps ?? [])
-    .filter((r: any) => r.profile)
-    .map((r: any) => ({
-      id: r.profile.id,
-      name: r.profile.name,
-      avatarUrl: r.profile.avatar_url ?? undefined,
-    }))
-
-  return {
-    id: e.id,
-    title: e.title,
-    description: e.description ?? undefined,
-    location: e.location ?? undefined,
-    category: e.category ?? undefined,
-    dressCode: e.dress_code ?? undefined,
-    dressCodeNote: e.dress_code_note ?? undefined,
-    status: e.status,
-    votingEndsAt: e.voting_ends_at ?? undefined,
-    confirmedTimeOptionId: e.confirmed_time_option_id ?? undefined,
-    suggestedBy: {
-      id: e.suggestedBy.id,
-      name: e.suggestedBy.name,
-      avatarUrl: e.suggestedBy.avatar_url ?? undefined,
-    },
-    attendees,
-    votingOptions: (e.votingOptions ?? []).map((opt: any) => ({
-      id: opt.id,
-      date: opt.date,
-      time: opt.time,
-      votes: opt.votes?.[0]?.count ?? 0,
-      voters: (opt.voters ?? []).map((v: any) => ({
-        id: v.profile.id,
-        name: v.profile.name,
-        avatarUrl: v.profile.avatar_url ?? undefined,
-      })),
-    })),
-    rsvps,
-  }
-}
