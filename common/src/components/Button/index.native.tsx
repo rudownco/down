@@ -6,7 +6,7 @@ import {
   ActivityIndicator,
   View,
 } from "react-native";
-import type { ButtonProps } from "./index";
+import type { ButtonProps } from "./types";
 
 const PRESS_CONFIG = { toValue: 0.95, duration: 100, useNativeDriver: true };
 const RELEASE_CONFIG = { toValue: 1.0, duration: 200, useNativeDriver: true };

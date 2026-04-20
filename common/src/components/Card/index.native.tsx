@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
-import type { CardProps } from './index';
+import type { CardProps } from './types';
 
 function randomTilt(max: number) {
   return (Math.random() * 2 - 1) * max;

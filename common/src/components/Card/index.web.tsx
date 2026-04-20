@@ -1,5 +1,5 @@
 import React from 'react';
-import type { CardProps } from './index';
+import type { CardProps } from './types';
 
 const VARIANT_CLASSES = {
   default: 'bg-surface-container-lowest',

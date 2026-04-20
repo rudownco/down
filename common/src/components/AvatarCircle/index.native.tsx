@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, Image } from 'react-native';
-import type { AvatarCircleProps } from './index';
+import type { AvatarCircleProps } from './types';
 
 const AVATAR_COLORS = [
   '#FE6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -38,6 +38,7 @@ export function AvatarCircle({
 }: AvatarCircleProps) {
   const dims   = SIZES[size];
   const bgColor = AVATAR_COLORS[djb2Hash(user.id) % AVATAR_COLORS.length];
+  const resolvedUri = imageUri ?? user.avatarUrl;
 
   return (
     <View
@@ -45,7 +46,7 @@ export function AvatarCircle({
         width: dims.container,
         height: dims.container,
         borderRadius: dims.container / 2,
-        backgroundColor: imageUri ? 'transparent' : bgColor,
+        backgroundColor: resolvedUri ? 'transparent' : bgColor,
         transform: [{ rotate: `${tilt}deg` }],
         borderWidth: borderColor ? 3 : 0,
         borderColor: borderColor ?? 'transparent',
@@ -54,9 +55,9 @@ export function AvatarCircle({
         overflow: 'hidden',
       }}
     >
-      {imageUri ? (
+      {resolvedUri ? (
         <Image
-          source={{ uri: imageUri }}
+          source={{ uri: resolvedUri }}
           style={{ width: dims.container, height: dims.container, borderRadius: dims.container / 2 }}
         />
       ) : (

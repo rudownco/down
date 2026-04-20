@@ -1,5 +1,5 @@
 import React from 'react';
-import type { InputProps } from './index';
+import type { InputProps } from './types';
 
 export function Input({ label, value, onChangeText, placeholder, multiline, numberOfLines, icon, className }: InputProps) {
   const sharedClass = `

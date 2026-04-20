@@ -1,6 +1,6 @@
 import React from 'react';
 import { AvatarCircle } from '../AvatarCircle';
-import type { AvatarStackProps } from './index';
+import type { AvatarStackProps } from './types';
 
 export function AvatarStack({ users, maxVisible = 4, size = 'sm', borderColor = '#FFFFFF', showCount = true, className }: AvatarStackProps) {
   const visible   = users.slice(0, maxVisible);

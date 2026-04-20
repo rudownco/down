@@ -21,9 +21,23 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 type ProfileRow = { name: string | null; avatar_url: string | null };
+
+async function fetchProfile(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<ProfileRow | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('name, avatar_url')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) return null;
+  return data as ProfileRow | null;
+}
 
 function buildUser(session: Session, profile: ProfileRow | null): User {
   const meta = session.user.user_metadata ?? {};
@@ -55,22 +69,14 @@ export function useAuthState(supabase: SupabaseClient): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const resolveGenerationRef = useRef(0);
+  const sessionRef = useRef<Session | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchProfile(userId: string): Promise<ProfileRow | null> {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('name, avatar_url')
-        .eq('id', userId)
-        .maybeSingle();
-      if (error) return null;
-      return data as ProfileRow | null;
-    }
-
     function applyLoggedOut() {
       resolveGenerationRef.current += 1;
+      sessionRef.current = null;
       setSession(null);
       setUser(null);
       setIsLoading(false);
@@ -78,11 +84,12 @@ export function useAuthState(supabase: SupabaseClient): AuthState {
 
     async function resolveLoggedIn(newSession: Session) {
       const gen = ++resolveGenerationRef.current;
+      sessionRef.current = newSession;
       setIsLoading(true);
       setUser(null);
       setSession(newSession);
 
-      const profile = await fetchProfile(newSession.user.id);
+      const profile = await fetchProfile(supabase, newSession.user.id);
       if (cancelled || gen !== resolveGenerationRef.current) return;
 
       setUser(buildUser(newSession, profile));
@@ -116,10 +123,19 @@ export function useAuthState(supabase: SupabaseClient): AuthState {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     resolveGenerationRef.current += 1;
+    sessionRef.current = null;
     setSession(null);
     setUser(null);
     setIsLoading(false);
   }, [supabase]);
 
-  return { session, user, isLoading, signOut };
+  const refreshProfile = useCallback(async () => {
+    const current = sessionRef.current;
+    if (!current) return;
+    const profile = await fetchProfile(supabase, current.user.id);
+    if (sessionRef.current !== current) return;
+    setUser(buildUser(current, profile));
+  }, [supabase]);
+
+  return { session, user, isLoading, signOut, refreshProfile };
 }

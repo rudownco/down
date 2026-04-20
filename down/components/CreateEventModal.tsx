@@ -12,7 +12,10 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { FilledInput, SketchCard, BouncyButton, SectionLabel } from "./index";
+import { FilledInput } from "./FilledInput";
+import { SketchCard } from "./SketchCard";
+import { BouncyButton } from "./BouncyButton";
+import { SectionLabel } from "./SectionLabel";
 import * as api from "../src/services/api";
 import type { EventSuggestion } from "../src/types";
 

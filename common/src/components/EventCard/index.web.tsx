@@ -2,8 +2,10 @@ import React from 'react';
 import { AvatarStack } from '../AvatarStack';
 import { RSVPButtons } from '../RSVPButtons';
 import { Card } from '../Card';
-import { getEventEmoji, EventStatusMeta, getConfirmedTimeOption } from '../../index';
-import type { EventCardProps } from './index';
+import { getEventEmoji } from '../../utils/emoji';
+import { EventStatusMeta } from '../../types';
+import { getConfirmedTimeOption } from '../../utils/event';
+import type { EventCardProps } from './types';
 
 const RSVP_CHIP: Record<string, { emoji: string; label: string; classes: string }> = {
   going:     { emoji: '✅', label: 'Down',    classes: 'bg-[#D8F8E7] text-[#1AA04F]' },

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
-import type { SectionLabelProps } from './index';
+import type { SectionLabelProps } from './types';
 
 export function SectionLabel({ text }: SectionLabelProps) {
   return (

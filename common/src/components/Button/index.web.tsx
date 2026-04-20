@@ -1,5 +1,5 @@
 import React from "react";
-import type { ButtonProps } from "./index";
+import type { ButtonProps } from "./types";
 
 const VARIANT_CLASSES: Record<string, string> = {
   primary:

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
-import type { RSVPButtonsProps } from './index';
+import type { RSVPButtonsProps } from './types';
 import type { RSVPStatus } from '../../types';
 
 const BUTTONS: {
