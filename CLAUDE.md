@@ -437,6 +437,7 @@ Auth: Google OAuth (live), Apple OAuth (planned)
 - Keep solutions clean and modular
 - Align with shared code strategy (React Native + Next.js)
 - Preserve the informal, meme-y tone in any UI copy
+- When you spot known debt that's out-of-scope for the current change, add an entry to `TECH_DEBT.md` rather than silently expanding scope. When you finish work that resolves an entry there, remove it.
 
 ### Before writing any new code, ask:
 1. **Is this logic shared?** → Put it in `/common`, not in a platform folder
