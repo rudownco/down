@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { AvatarCircle } from '../AvatarCircle';
-import type { AvatarStackProps } from './index';
+import type { AvatarStackProps } from './types';
 
 const SIZE_MAP = { xs: 24, sm: 32, md: 40, lg: 56 };
 

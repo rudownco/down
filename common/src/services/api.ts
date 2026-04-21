@@ -273,6 +273,54 @@ export async function updateNotificationSettings(
   if (error) throw error;
 }
 
+// ─── Profile ─────────────────────────────────────────────
+
+export interface UpdateProfileInput {
+  name?: string;
+  nickname?: string;
+  avatar_url?: string;
+}
+
+export interface ProfileRow {
+  id: string;
+  name: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
+  updated_at: string | null;
+}
+
+export async function updateProfile(
+  supabase: SupabaseClient,
+  userId: string,
+  updates: UpdateProfileInput
+): Promise<ProfileRow> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select('id, name, nickname, avatar_url, updated_at')
+    .single();
+  if (error) throw error;
+  return data as ProfileRow;
+}
+
+export async function uploadAvatar(
+  supabase: SupabaseClient,
+  userId: string,
+  file: File | Blob | Uint8Array | ArrayBuffer,
+  fileExt: string
+): Promise<string> {
+  const ext = fileExt.replace('jpeg', 'jpg');
+  const path = `${userId}/avatar.${ext}`;
+  const contentType = ext === 'jpg' ? 'image/jpeg' : `image/${ext}`;
+  const { error } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, { upsert: true, contentType });
+  if (error) throw error;
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path);
+  return `${data.publicUrl}?t=${Date.now()}`;
+}
+
 export async function acceptInvite(
   supabase: SupabaseClient,
   token: string

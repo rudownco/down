@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { EventCard, AvatarCircle, getGreeting } from '@down/common';
+import { EventCard, getGreeting } from '@down/common';
 import { fetchGroups, fetchEvents } from '@down/common';
 import type { DownGroup, EventSuggestion } from '@down/common';
 import { EventDetailModal } from '@/components/EventDetailModal';
@@ -16,9 +16,6 @@ export default function DashboardPage() {
   const [events, setEvents] = useState<EventSuggestion[]>([]);
   const [inspectedEvent, setInspectedEvent] = useState<EventSuggestion | null>(null);
   const greeting = getGreeting();
-
-  // user is already our domain User type (mapped by shared useAuthState hook)
-  const currentUser = user;
 
   useEffect(() => {
     if (!user) {
@@ -58,14 +55,11 @@ export default function DashboardPage() {
         />
       )}
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-outline font-body">{greeting} 👋</p>
-          <h1 className="text-2xl font-heading font-bold text-on-surface mt-0.5">
-            What&apos;s the move?
-          </h1>
-        </div>
-        {currentUser && <AvatarCircle user={currentUser} size="md" />}
+      <div>
+        <p className="text-sm text-outline font-body">{greeting} 👋</p>
+        <h1 className="text-2xl font-heading font-bold text-on-surface mt-0.5">
+          What&apos;s the move?
+        </h1>
       </div>
 
       {/* Squad preview */}
@@ -102,7 +96,7 @@ export default function DashboardPage() {
             <p className="text-sm text-on-surface-variant">Be the one to make it happen 👀</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             {events.map((event) => (
               <EventCard
                 key={event.id}

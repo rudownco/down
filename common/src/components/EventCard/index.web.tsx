@@ -2,8 +2,10 @@ import React from 'react';
 import { AvatarStack } from '../AvatarStack';
 import { RSVPButtons } from '../RSVPButtons';
 import { Card } from '../Card';
-import { getEventEmoji, EventStatusMeta, getConfirmedTimeOption } from '../../index';
-import type { EventCardProps } from './index';
+import { getEventEmoji } from '../../utils/emoji';
+import { EventStatusMeta } from '../../types';
+import { getConfirmedTimeOption } from '../../utils/event';
+import type { EventCardProps } from './types';
 
 const RSVP_CHIP: Record<string, { emoji: string; label: string; classes: string }> = {
   going:     { emoji: '✅', label: 'Down',    classes: 'bg-[#D8F8E7] text-[#1AA04F]' },
@@ -21,7 +23,7 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   const chipRSVP = currentRSVP ? RSVP_CHIP[currentRSVP] : null;
 
   const inner = (
-    <Card className="hover:shadow-md transition-shadow flex flex-col gap-4">
+    <Card className="hover:shadow-md transition-shadow flex flex-col gap-4 h-full aspect-square overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -91,6 +93,6 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   );
 
   return onPress
-    ? <button onClick={onPress} className="w-full text-left">{inner}</button>
+    ? <button onClick={onPress} className="w-full h-full text-left">{inner}</button>
     : inner;
 }

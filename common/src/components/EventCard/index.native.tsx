@@ -6,7 +6,7 @@ import { Card } from '../Card';
 import { getEventEmoji } from '../../utils/emoji';
 import { EventStatusMeta } from '../../types';
 import { getConfirmedTimeOption } from '../../utils/event';
-import type { EventCardProps } from './index';
+import type { EventCardProps } from './types';
 
 const RSVP_CHIP: Record<string, { emoji: string; label: string; bg: string; color: string }> = {
   going:     { emoji: '✅', label: 'Down',    bg: '#D8F8E7', color: '#1AA04F' },

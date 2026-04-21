@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SectionLabelProps } from './index';
+import type { SectionLabelProps } from './types';
 
 export function SectionLabel({ text, className }: SectionLabelProps) {
   return (

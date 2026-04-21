@@ -2,7 +2,7 @@
 // "The Social Sketchbook" aesthetic
 
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { EventCardNew, JellybeanChip, FloatingActionButton, AvatarCircle } from "../../../components";
@@ -25,6 +25,7 @@ export default function EventHubScreen() {
   const { user } = useAuth();
   const tc = useThemeColors();
   const [activeFilter, setActiveFilter] = useState("active");
+  const [refreshing, setRefreshing] = useState(false);
 
   const { groups, loadGroups, isLoading: groupsLoading } = useGroupStore();
   const { events, loadEvents, updateEvent, isLoading: eventsLoading } =
@@ -45,7 +46,17 @@ export default function EventHubScreen() {
 
   const isBootstrapping =
     (groupsLoading && groups.length === 0) ||
-    (!!firstGroup && eventsLoading);
+    (!!firstGroup && eventsLoading && events.length === 0);
+
+  const handleRefresh = useCallback(async () => {
+    if (!firstGroup) return;
+    setRefreshing(true);
+    try {
+      await loadEvents(firstGroup.id);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadEvents, firstGroup?.id]);
 
   const handleHubRsvp = useCallback(
     (event: EventSuggestion) => (status: RSVPStatus) => {
@@ -128,6 +139,9 @@ export default function EventHubScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={tc.primary} />
+        }
       >
         {/* Greeting */}
         <View className="px-6 mt-4 mb-6">

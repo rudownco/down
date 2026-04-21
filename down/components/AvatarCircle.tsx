@@ -51,6 +51,7 @@ export function AvatarCircle({
   const dims = SIZES[size];
   const bgColor = AVATAR_COLORS[djb2Hash(user.id) % AVATAR_COLORS.length];
   const rotation = useMemo(() => tilt ?? randomTilt(3), [tilt]);
+  const resolvedUri = imageUri ?? user.avatarUrl;
 
   return (
     <View
@@ -58,15 +59,15 @@ export function AvatarCircle({
       style={{
         width: dims.container,
         height: dims.container,
-        backgroundColor: imageUri ? "transparent" : bgColor,
+        backgroundColor: resolvedUri ? "transparent" : bgColor,
         transform: [{ rotate: `${rotation}deg` }],
         borderWidth: borderColor ? 3 : 0,
         borderColor: borderColor ?? "transparent",
       }}
     >
-      {imageUri ? (
+      {resolvedUri ? (
         <Image
-          source={{ uri: imageUri }}
+          source={{ uri: resolvedUri }}
           style={{ width: dims.container, height: dims.container }}
           className="rounded-full"
         />

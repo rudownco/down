@@ -1,5 +1,5 @@
 import React from 'react';
-import type { AvatarCircleProps } from './index';
+import type { AvatarCircleProps } from './types';
 
 const AVATAR_COLORS = [
   '#FE6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -7,11 +7,12 @@ const AVATAR_COLORS = [
 ];
 
 const SIZE_CLASSES = {
-  xs: 'w-6  h-6  text-[9px]',
-  sm: 'w-8  h-8  text-xs',
-  md: 'w-10 h-10 text-sm',
-  lg: 'w-14 h-14 text-base',
-  xl: 'w-20 h-20 text-xl',
+  xs:  'w-6  h-6  text-[9px]',
+  sm:  'w-8  h-8  text-xs',
+  md:  'w-10 h-10 text-sm',
+  lg:  'w-14 h-14 text-base',
+  xl:  'w-20 h-20 text-xl',
+  '2xl': 'w-32 h-32 text-4xl',
 };
 
 function djb2Hash(str: string): number {
@@ -30,19 +31,20 @@ function getInitials(name: string): string {
 
 export function AvatarCircle({ user, size = 'md', imageUri, tilt = 0, borderColor, className }: AvatarCircleProps) {
   const bgColor = AVATAR_COLORS[djb2Hash(user.id) % AVATAR_COLORS.length];
+  const resolvedUri = imageUri ?? user.avatarUrl;
 
   return (
     <div
       className={`rounded-full flex items-center justify-center font-bold text-white flex-shrink-0 select-none ${SIZE_CLASSES[size]} ${className ?? ''}`}
       style={{
-        backgroundColor: imageUri ? 'transparent' : bgColor,
+        backgroundColor: resolvedUri ? 'transparent' : bgColor,
         transform: tilt ? `rotate(${tilt}deg)` : undefined,
         border: borderColor ? `3px solid ${borderColor}` : undefined,
       }}
       title={user.name}
     >
-      {imageUri
-        ? <img src={imageUri} alt={user.name} className="w-full h-full rounded-full object-cover" />
+      {resolvedUri
+        ? <img src={resolvedUri} alt={user.name} className="w-full h-full rounded-full object-cover" />
         : getInitials(user.name)
       }
     </div>

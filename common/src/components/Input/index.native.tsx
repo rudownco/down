@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput } from 'react-native';
-import type { InputProps } from './index';
+import type { InputProps } from './types';
 
 export function Input({ label, value, onChangeText, placeholder, multiline, numberOfLines, icon }: InputProps) {
   return (

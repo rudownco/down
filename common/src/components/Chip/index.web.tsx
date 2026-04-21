@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ChipProps } from './index';
+import type { ChipProps } from './types';
 
 const VARIANT_CLASSES = {
   primary:   { base: 'bg-primary-container text-on-primary-container', active: 'bg-primary text-on-primary' },

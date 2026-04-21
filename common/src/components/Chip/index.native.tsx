@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Pressable, Text, Animated, View } from 'react-native';
-import type { ChipProps } from './index';
+import type { ChipProps } from './types';
 
 const PRESS_CONFIG   = { toValue: 0.92, duration: 80,  useNativeDriver: true };
 const RELEASE_CONFIG = { toValue: 1.0,  duration: 150, useNativeDriver: true };

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { RSVPButtonsProps } from './index';
+import type { RSVPButtonsProps } from './types';
 import type { RSVPStatus } from '../../types';
 
 const OPTIONS: { status: RSVPStatus; label: string; emoji: string }[] = [

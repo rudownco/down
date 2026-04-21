@@ -355,6 +355,9 @@ alert(e?.message ?? 'Something went wrong');
 ### 18. Profiles Are the Source of Truth for User Data ⚠️ CRITICAL
 
 - Names, avatars, and other display fields come from the `profiles` row (joined in queries, mapped to domain `User`). Never treat `auth.users` / `user_metadata` as authoritative for those fields in app code.
+- Profile mutations go through `updateProfile()` and `uploadAvatar()` in `common/src/services/api.ts`. `updateProfile()` writes directly to the `profiles` table (gated by the `profiles_update` RLS policy: `id = auth.uid()`). `uploadAvatar()` writes to the public `avatars` storage bucket at path `{userId}/avatar.{ext}` (gated by per-user folder RLS) and returns a cache-busted public URL.
+- After a profile write, call `refreshProfile()` from `useAuthState` (re-exposed through each platform's `useAuth()`) so the shared domain `User` re-hydrates. Do not mutate `user` locally in components.
+- `AvatarCircle` (common + RN) auto-falls-back to `user.avatarUrl` when `imageUri` is not passed — never read `user_metadata.avatar_url` from a component.
 
 ### 19. Permissions Are Defined in Common and Mirrored to Edge Functions ⚠️ CRITICAL
 
@@ -434,6 +437,7 @@ Auth: Google OAuth (live), Apple OAuth (planned)
 - Keep solutions clean and modular
 - Align with shared code strategy (React Native + Next.js)
 - Preserve the informal, meme-y tone in any UI copy
+- When you spot known debt that's out-of-scope for the current change, add an entry to `TECH_DEBT.md` rather than silently expanding scope. When you finish work that resolves an entry there, remove it.
 
 ### Before writing any new code, ask:
 1. **Is this logic shared?** → Put it in `/common`, not in a platform folder
