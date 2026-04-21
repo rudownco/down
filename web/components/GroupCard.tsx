@@ -13,8 +13,8 @@ export function GroupCard({ group }: GroupCardProps) {
   const count = group.memberCount ?? group.members.length;
 
   return (
-    <Link href={`/groups/${group.id}`}>
-      <Card className="hover:shadow-md transition-all hover:border-primary/30 cursor-pointer">
+    <Link href={`/groups/${group.id}`} className="aspect-square block">
+      <Card className="hover:shadow-md transition-all hover:border-primary/30 cursor-pointer h-full flex flex-col justify-between">
         <CardHeader className="pb-2">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{emoji}</span>

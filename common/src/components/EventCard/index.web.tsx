@@ -23,7 +23,7 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   const chipRSVP = currentRSVP ? RSVP_CHIP[currentRSVP] : null;
 
   const inner = (
-    <Card className="hover:shadow-md transition-shadow flex flex-col gap-4">
+    <Card className="hover:shadow-md transition-shadow flex flex-col gap-4 h-full aspect-square overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -93,6 +93,6 @@ export function EventCard({ event, onPress, onRSVP, currentUserId }: EventCardPr
   );
 
   return onPress
-    ? <button onClick={onPress} className="w-full text-left">{inner}</button>
+    ? <button onClick={onPress} className="w-full h-full text-left">{inner}</button>
     : inner;
 }
