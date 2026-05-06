@@ -12,7 +12,8 @@
     "build:web": "npm run build --workspace=web",
     "build:common": "npm run build --workspace=common",
     "sync:shared": "tsx scripts/sync-permissions.ts",
-    "check:shared": "tsx scripts/sync-permissions.ts --check"
+    "check:shared": "tsx scripts/sync-permissions.ts --check",
+    "test:backend": "npm run test --prefix backend"
   },
   "devDependencies": {
     "tsx": "^4.19.3"
